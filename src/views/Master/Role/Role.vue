@@ -104,6 +104,7 @@
           </v-card>
         </v-dialog>
       </v-toolbar>
+      <v-divider></v-divider>
     </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon
@@ -140,7 +141,6 @@ import {mapGetters} from 'vuex'
       dialog: false,
       dialogDelete: false,
       headers: [
-        { text: 'Role ID', value: 'id' },
         { text: 'Role Name', value: 'role_name' },
         { text: 'Role Desc', value: 'role_desc' },
         { text: 'Actions', value: 'actions', sortable: false }
@@ -193,7 +193,10 @@ import {mapGetters} from 'vuex'
       deleteItemConfirm () {
         axios.delete(`http://localhost:8000/api/v1/deleterole/${this.editedItem.id}`)
             .then(() => {
-                window.location.reload();
+            let uri = `http://localhost:8000/api/v1/roles`;
+                  axios.get(uri).then(response => {
+                      this.userData = response.data.data;
+                  });
             }).catch((error) => {
             alert(error);
         });
@@ -220,7 +223,10 @@ import {mapGetters} from 'vuex'
                 let uri = `http://localhost:8000/api/v1/updaterole/${this.editedItem.id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/roles`;
+                              axios.get(uri).then(response => {
+                                  this.userData = response.data.data;
+                              });
                         this.close();
                     }).catch(error => {
                     this.validation = error.response.data.data;
@@ -230,7 +236,10 @@ import {mapGetters} from 'vuex'
             let uri = `http://localhost:8000/api/v1/createroles`;
             axios.post(uri, this.editedItem)
                 .then(() => {
-                    window.location.reload();
+                    let uri = `http://localhost:8000/api/v1/roles`;
+                          axios.get(uri).then(response => {
+                              this.userData = response.data.data;
+                          });
                     this.close();
                 }).catch(error => {
                 this.validation = error.response.data.data;

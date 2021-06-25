@@ -202,6 +202,7 @@
           </v-card>
         </v-dialog>
       </v-toolbar>
+      <v-divider></v-divider>
     </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon
@@ -218,6 +219,12 @@
         mdi-delete
       </v-icon>
     </template>
+    <template v-slot:[`item.created_at`]="{ item }">
+      {{formatDate(item.created_at)}}
+    </template>
+    <template v-slot:[`item.updated_at`]="{ item }">
+      {{formatDate(item.updated_at)}}
+    </template>  
     <!-- <template v-slot:no-data>
       <v-btn
         color="primary"
@@ -232,13 +239,13 @@
 
 <script>
 import axios from 'axios';
-import {mapGetters} from 'vuex'
+import {mapGetters} from 'vuex';
+import moment from 'moment';
   export default {
     data: () => ({
       dialog: false,
       dialogDelete: false,
       headers: [
-        { text: 'Menu ID', value: 'menu_id' },
         { text: 'Menu Name', value: 'menu_name' },
         { text: 'Menu Desc', value: 'menu_desc' },
         { text: 'Role Id', value: 'role_id' },
@@ -335,7 +342,11 @@ import {mapGetters} from 'vuex'
                 let uri = `http://localhost:8000/api/v1/updatemenus/${this.editedItem.menu_id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        window.location.reload();
+                        // window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/menus`;
+                            axios.get(uri).then(response => {
+                                this.userData = response.data.data;
+                        });                        
                         this.close();
                     }).catch(error => {
                     this.validation = error.response.data.data;
@@ -344,13 +355,19 @@ import {mapGetters} from 'vuex'
                 let uri = `http://localhost:8000/api/v1/createmenus/${this.user.id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/menus`;
+                            axios.get(uri).then(response => {
+                                this.userData = response.data.data;
+                        });
                         this.close();
                     }).catch(error => {
                     this.validation = error.response.data.data;
                 });
           }
       },
+      formatDate(value){
+        return moment(value).format("DD-MM-YYYY");
+      }
     },
     
   }

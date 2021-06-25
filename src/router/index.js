@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import store from '../store/index.js'
-import helloworld from '../components/HelloWorld.vue'
+// import helloworld from '../components/HelloWorld.vue'
 
 Vue.use(VueRouter)
 
@@ -20,7 +20,8 @@ const routes = [
     // which is lazy-loaded when the route is visited.
     component: () => import('../views/Master/User/User.vue'),
     meta:{
-      auth: true
+      auth: true,
+      admin:true
     }
   },
   {
@@ -28,7 +29,8 @@ const routes = [
     name: 'Role',
     component: () => import('../views/Master/Role/Role.vue'),
     meta: { 
-      auth: true 
+      auth: true,
+      admin:true 
     }
   },
   {
@@ -36,7 +38,8 @@ const routes = [
     name: 'Customers',
     component: () => import( '../views/Master/Customers/Customers.vue'),
     meta: { 
-      auth: true 
+      auth: true,
+      admin:true 
     }
   },
   {
@@ -44,7 +47,8 @@ const routes = [
     name: 'Menu',
     component: () => import( '../views/Master/Menu/Menu.vue'),
     meta: { 
-      auth: true 
+      auth: true,
+      admin:true 
     }
   },
   {
@@ -52,7 +56,8 @@ const routes = [
     name: 'MenuDetail',
     component: () => import( '../views/Master/MenuDetail/MenuDetail.vue'),
     meta: { 
-      auth: true 
+      auth: true,
+      admin:true 
     }
   },
   {
@@ -76,7 +81,7 @@ const routes = [
     name: 'DetailBupot',
     component: () => import( '../views/Master/TrxPage/DetailBupot.vue'),
     meta: { 
-      auth: true 
+      auth: true
     }
   },
   {
@@ -84,13 +89,65 @@ const routes = [
     name: 'InputInquiryBupot',
     component: () => import( '../views/Master/TrxPage/InputInquiryBupot.vue'),
     meta: { 
-      auth: true 
+      auth: true,
+      auth_nokasir:true  
     }
   },
   {
-    path:'/helloworld',
-    name: 'HelloWorld',
-    component: helloworld,
+    path: '/trxpagekasir',
+    name: 'TrxPageKasir',
+    component: () => import( '../views/Master/TrxPageKasir/TrxPageKasir.vue'),
+    meta: { 
+      auth: true,
+      kasir:true 
+    }
+  },
+  {
+    path: '/trxpagevalidator',
+    name: 'TrxPageValidator',
+    component: () => import( '../views/Master/TrxPageValidasi/TrxPageValidasi.vue'),
+    meta: { 
+      auth: true,
+      auth_validator: true 
+    }
+  },
+  {
+    path: '/detailbupotvalidator/:id',
+    name: 'DetailBupotValidator',
+    component: () => import( '../views/Master/TrxPageValidasi/DetailBupotValidator.vue'),
+    meta: { 
+      auth: true,
+      auth_validator: true 
+    }
+  },
+  {
+    path:'/foradmin',
+    name: 'ForAdmin',
+    component: () => import( '../components/ForAdmin.vue'),
+    meta: {
+      auth: true
+    }
+  },
+  {
+    path:'/forvalidator',
+    name: 'ForValidator',
+    component: () => import( '../components/ForValidator.vue'),
+    meta: {
+      auth: true
+    }
+  },
+  {
+    path:'/forkasir',
+    name: 'ForKasir',
+    component: () => import( '../components/ForKasir.vue'),
+    meta: {
+      auth: true
+    }
+  },
+  {
+    path:'/forkasir2',
+    name: 'ForKasir2',
+    component: () => import( '../components/ForKasir2.vue'),
     meta: {
       auth: true
     }
@@ -107,6 +164,34 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.auth)) {
     if (store.getters.isLoggedIn && store.getters.user) {
       next()
+      if (to.matched.some(record => record.meta.kasir)){
+        if(store.getters.user.role_id == 11 || store.getters.user.role_id == 7){
+          next()
+        }else{
+          next('/forkasir')
+        }
+      }
+      if (to.matched.some(record => record.meta.auth_validator)){
+        if(store.getters.user.role_id == 10 || store.getters.user.role_id == 7){
+          next()
+        }else{
+          next('/forvalidator')
+        }
+      }
+      if (to.matched.some(record => record.meta.admin)){
+        if(store.getters.user.role_id == 7){
+          next()
+        }else{
+          next('/foradmin')
+        }
+      }
+      if (to.matched.some(record => record.meta.auth_nokasir)){
+        if(store.getters.user.role_id == 11){
+          next('/forkasir2')
+        }else{
+          next()
+        }
+      }
       return
     }
     next('/')

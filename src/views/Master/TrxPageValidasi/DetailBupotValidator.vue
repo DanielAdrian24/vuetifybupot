@@ -1,32 +1,13 @@
 <template>
     <v-container class="my-5">
     <v-card>
-
     <v-toolbar
         flat
       >
         <v-toolbar-title>Detail Bukti Potong PPh</v-toolbar-title>
         <v-spacer></v-spacer>
         <!-- <button>coba</button> -->
-        <v-btn
-          color="success"
-          dark
-          class="mb-2 mr-1"
-          @click="updateSubmit"
-          v-if="dokumenBupot.status != 'S'"
-        >
-          Submit
-        </v-btn>
-                <v-btn
-          color="success"
-          dark
-          class="mb-2 mr-1"
-          @click="updateCancel"
-          v-if="dokumenBupot.status != 'S'"
-        >
-          Batal
-        </v-btn>  
-        <router-link :to="{name: 'TrxPage'}">
+        <router-link :to="{name: 'TrxPageValidator'}">
                 <v-btn
           color="success"
           dark
@@ -130,7 +111,7 @@ export default {
             axios.get(uri).then(response => {
                 this.dokumenBupot = response.data.data;
             });        
-        let uri2 = `http://localhost:8000/api/dtlKwtpage/${this.$route.params.id}/${this.user.customer_id}`;
+        let uri2 = `http://localhost:8000/api/dtlKwtpageValidator/${this.$route.params.id}`;
             axios.get(uri2).then(response => {
                 this.dokumenKwt = response.data.data;
             });         
@@ -140,19 +121,7 @@ export default {
           user: 'user',
         })
     },
-    methods: {
-      updateSubmit () {
-        let uri = `http://localhost:8000/api/updatestatusbupotsubmit/${this.$route.params.id}`;
-            axios.post(uri).then(() => {
-                this.$router.push({name: 'TrxPage'});
-            });      
-      },     
-      updateCancel (){
-        let uri = `http://localhost:8000/api/updatestatusbupotcancel/${this.$route.params.id}`;
-            axios.post(uri).then(() => {
-                this.$router.push({name: 'TrxPage'});
-            }); 
-      }   
+    methods: {  
     }
 }
 </script>

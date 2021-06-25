@@ -242,6 +242,7 @@
           </v-card>
         </v-dialog>
       </v-toolbar>
+      <v-divider></v-divider>
     </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon
@@ -278,7 +279,6 @@ import {mapGetters} from 'vuex'
       dialog: false,
       dialogDelete: false,
       headers: [
-        { text: 'Customer ID', value: 'id' },
         { text: 'Customer Number', value: 'customer_number' },
         { text: 'Customer Name', value: 'customer_name' },
         { text: 'Description', value: 'description' },
@@ -335,7 +335,10 @@ import {mapGetters} from 'vuex'
       deleteItemConfirm () {
         axios.delete(`http://localhost:8000/api/v1/deletecustomers/${this.editedItem.id}`)
             .then(() => {
-                window.location.reload();
+              let uri = `http://localhost:8000/api/v1/customers`;
+                  axios.get(uri).then(response => {
+                      this.userData = response.data.data;
+                  });
             }).catch((error) => {
             alert(error);
         });        
@@ -363,7 +366,10 @@ import {mapGetters} from 'vuex'
                 let uri = `http://localhost:8000/api/v1/updatecustomers/${this.editedItem.id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/customers`;
+                            axios.get(uri).then(response => {
+                                this.userData = response.data.data;
+                        });
                         this.close();
                     }).catch(error => {
                     this.validation = error.response.data.data;
@@ -372,7 +378,10 @@ import {mapGetters} from 'vuex'
                 let uri = `http://localhost:8000/api/v1/createcustomers/${this.user.id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/customers`;
+                            axios.get(uri).then(response => {
+                                this.userData = response.data.data;
+                        });
                         this.close();
                     }).catch(error => {
                     this.validation = error.response.data.data;

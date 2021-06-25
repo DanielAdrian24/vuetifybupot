@@ -119,9 +119,9 @@
             ref="customer_id"
             v-model="editedItem.customer_id"
             :items="cust_id"
-            item-text="customer_name"
+            :item-text="getItemText"
             item-value="id"
-            label="Customer ID "
+            label="Customer"
             placeholder="Select..."
             required
           ></v-autocomplete>
@@ -196,6 +196,7 @@
           </v-card>
         </v-dialog>
       </v-toolbar>
+      <v-divider></v-divider>
     </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon
@@ -212,6 +213,12 @@
         mdi-delete
       </v-icon>
     </template>
+    <template v-slot:[`item.created_at`]="{ item }">
+      {{formatDate(item.created_at)}}
+    </template>
+    <template v-slot:[`item.updated_at`]="{ item }">
+      {{formatDate(item.updated_at)}}
+    </template>    
     <!-- <template v-slot:no-data>
       <v-btn
         color="primary"
@@ -226,7 +233,8 @@
 
 <script>
 import axios from 'axios';
-import {mapGetters} from 'vuex'
+import {mapGetters} from 'vuex';
+import moment from 'moment';
   export default {
     data: () => ({
       dialog: false,
@@ -238,11 +246,11 @@ import {mapGetters} from 'vuex'
           sortable: false,
           value: 'username',
         },
-        { text: 'Customer ID', value: 'customer_id' },
+        { text: 'Customer Name', value: 'customer_name' },
         { text: 'Email', value: 'email' },
         { text: 'Email Verified At', value: 'email_verified_at' },
         { text: 'Active Flag', value: 'active_flag'},
-        { text: 'Role Id', value: 'role_id'},
+        { text: 'Role', value: 'role_name'},
         { text: 'Created At', value: 'created_at'},
         { text: 'Updated At', value: 'updated_at'},
         { text: 'Actions', value: 'actions', sortable: false }
@@ -297,6 +305,7 @@ import {mapGetters} from 'vuex'
         this.editedIndex = this.userData.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
+        console.log(this.editedItem)
       },
 
       deleteItem (item) {
@@ -308,7 +317,11 @@ import {mapGetters} from 'vuex'
       deleteItemConfirm () {
         axios.delete(`http://localhost:8000/api/v1/getid/${this.editedItem.id}`)
             .then(() => {
-                window.location.reload();
+              let uri = `http://localhost:8000/api/v1/user`;
+                    axios.get(uri).then(response => {
+                        this.userData = response.data.data;
+                        // console.log(this.userData);
+                    });
             }).catch((error) => {
             alert(error);
         });
@@ -334,8 +347,11 @@ import {mapGetters} from 'vuex'
             let uri = `http://localhost:8000/api/v1/updateuser/${this.editedItem.id}`;
             axios.post(uri, this.editedItem)
                       .then(() => {
-                          // this.$router.push({name: 'User'});
-                          window.location.reload();
+                          let uri = `http://localhost:8000/api/v1/user`;
+                                axios.get(uri).then(response => {
+                                    this.userData = response.data.data;
+                                    // console.log(this.userData);
+                                });
                       }).catch(error => {
                       this.validation = error.response.data.data;
             });         
@@ -343,14 +359,25 @@ import {mapGetters} from 'vuex'
             let uri = `http://localhost:8000/api/v1/createuser/${this.user.id}`;
             axios.post(uri, this.editedItem)
                 .then(() => {
-                    window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/user`;
+                              axios.get(uri).then(response => {
+                                  this.userData = response.data.data;
+                                  // console.log(this.userData);
+                              });
                 }).catch(error => {
                 this.validation = error.response.data.data;
             });
           }
         this.close();
       },
+      formatDate(value){
+        return moment(value).format("DD-MM-YYYY");
+      },
+      getItemText(value){
+        return `${value.customer_number} - ${value.customer_name}`;
+      }
     },
+
     
   }
 </script>

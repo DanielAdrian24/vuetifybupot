@@ -168,6 +168,7 @@
           </v-card>
         </v-dialog>
       </v-toolbar>
+      <v-divider></v-divider>
     </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon
@@ -184,6 +185,12 @@
         mdi-delete
       </v-icon>
     </template>
+    <template v-slot:[`item.created_at`]="{ item }">
+      {{formatDate(item.created_at)}}
+    </template>
+    <template v-slot:[`item.updated_at`]="{ item }">
+      {{formatDate(item.updated_at)}}
+    </template>  
     <!-- <template v-slot:no-data>
       <v-btn
         color="primary"
@@ -198,7 +205,8 @@
 
 <script>
 import axios from 'axios';
-import {mapGetters} from 'vuex'
+import {mapGetters} from 'vuex';
+import moment from 'moment';
   export default {
     data: () => ({
       dialog: false,
@@ -251,12 +259,12 @@ import {mapGetters} from 'vuex'
         let uri2 = `http://localhost:8000/api/v1/menus`;
         axios.get(uri2).then((response) => {
             this.menuId = response.data.data;
-            console.log(this.menuId);
         });
     },
 
     methods: {
       editItem (item) {
+        console.log(item)
         this.editedIndex = this.userData.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
@@ -271,7 +279,10 @@ import {mapGetters} from 'vuex'
       deleteItemConfirm () {
         axios.delete(`http://localhost:8000/api/v1/deletemenudetails/${this.editedItem.menu_detail_id}`)
             .then(() => {
-                window.location.reload();
+              let uri = `http://localhost:8000/api/v1/menudetails`;
+              axios.get(uri).then(response => {
+                  this.userData = response.data.data;
+              });
             }).catch((error) => {
             alert(error);
         });
@@ -299,7 +310,10 @@ import {mapGetters} from 'vuex'
                 let uri = `http://localhost:8000/api/v1/updatemenudetails/${this.editedItem.menu_detail_id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/menudetails`;
+                        axios.get(uri).then(response => {
+                            this.userData = response.data.data;
+                        });
                         this.close();
                     }).catch(error => {
                     this.validation = error.response.data.data;
@@ -308,13 +322,19 @@ import {mapGetters} from 'vuex'
                 let uri = `http://localhost:8000/api/v1/createmenudetails/${this.user.id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        window.location.reload();
+                        let uri = `http://localhost:8000/api/v1/menudetails`;
+                        axios.get(uri).then(response => {
+                            this.userData = response.data.data;
+                        });
                         this.close();
                     }).catch(error => {
                     this.validation = error.response.data.data;
                 });
           }
       },
+      formatDate(value){
+        return moment(value).format("DD-MM-YYYY");
+      }
     },
     
   }

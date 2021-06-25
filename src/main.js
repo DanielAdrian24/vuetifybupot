@@ -6,9 +6,12 @@ import vuetify from './plugins/vuetify'
 import '@fortawesome/fontawesome-free/css/all.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 import axios from 'axios'
+// import VueCurrencyInput from "vue-currency-input";
+// import "vuetify/dist/vuetify.min.css";
 
 axios.defaults.baseURL = 'http://localhost:8000/api/'
 
+// Vue.use(VueCurrencyInput);
 Vue.config.productionTip = false
 const token = localStorage.getItem('token');
 if (token) { 

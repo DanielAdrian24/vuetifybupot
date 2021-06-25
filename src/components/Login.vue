@@ -34,7 +34,7 @@
       class="mr-4"
       @click="userLogin"
     >
-      Validate
+      Login
     </v-btn>
   </v-form>
     </v-card-text>
@@ -42,6 +42,7 @@
 </template>
 
 <script>
+import {mapGetters} from 'vuex'
 export default {
   data() {
     return {
@@ -59,12 +60,24 @@ export default {
       this.$store
         .dispatch("login", this.form)
         .then(() => {
-          this.$router.push({ name: "User" });
+          // alert(this.user.role_id)
+          if(this.user.role_id == 12){
+            this.$router.push({ name: "TrxPage" });
+          }else if (this.user.role_id == 7){
+            this.$router.push({ name: "TrxPage" });
+          }else if (this.user.role_id == 10){
+            this.$router.push({ name: "TrxPageValidator" });
+          }
         })
         .catch((error) => {
           this.errors = error.response.data.errors;
         });
     },
+  },
+  computed: {
+        ...mapGetters({
+        user: 'user',
+      })     
   },
 };
 </script>

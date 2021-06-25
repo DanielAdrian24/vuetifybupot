@@ -1,8 +1,6 @@
 <template>
     <v-container class="my-5">
     <v-card>
-    <h5>Selected: {{simpan}}</h5> 
-    <h5>idKwt: {{idKwt}}</h5> 
     <v-toolbar
         flat
       >
@@ -13,16 +11,10 @@
           color="success"
           dark
           class="mb-2 mr-1"
+          @click="insertKwitansi"
         >
           Simpan
-        </v-btn>
-                <v-btn
-          color="success"
-          dark
-          class="mb-2 mr-1"
-        >
-          Batal
-        </v-btn>  
+        </v-btn> 
         <router-link :to="{name: 'TrxPage'}">
                 <v-btn
           color="success"
@@ -49,10 +41,11 @@
             label="Nomor Dok. BuktiPotong"
             class="mt-5"
           ></v-text-field>
-          <v-text-field
-            v-model="dokumenBupot.bupot_date"
-            label="Tanggal Bukti Potong"
-          ></v-text-field>
+          <v-text-field v-model="dokumenBupot.bupot_date" single-line label="Masukan Tanggal">
+            <template v-slot:append-outer>
+              <date-picker v-model="dokumenBupot.bupot_date"/>
+            </template>
+          </v-text-field>                   
           <v-text-field
             v-model="dokumenBupot.dpp_amount"
             label="Jumlah Penghasilan Bruto"
@@ -62,8 +55,9 @@
             label="tarif"
           ></v-text-field>
           <v-text-field
-            v-model="dokumenBupot.pph_amount"
+            v-model="result"
             label="PPh"
+            disabled
           ></v-text-field>
         </v-card-text>
       </v-card>
@@ -128,6 +122,12 @@
                               show-select
                               class="elevation-1"
                             >
+                              <template v-slot:[`item.dpp_amount`]="{ item }">
+                                {{formatCurrency(item.dpp_amount)}}
+                              </template>    
+                              <template v-slot:[`item.pph_amount`]="{ item }">
+                                {{formatCurrency(item.pph_amount)}}
+                              </template>                             
                             </v-data-table>                
                         </v-card-text>
                       </v-card>
@@ -136,6 +136,7 @@
                       color="success"
                       dark
                       class="mb-2 ml-2"
+                      @click="deleteItem()"
                     >
                         - Kwitansi
                     </v-btn>
@@ -144,7 +145,7 @@
                         <v-card-title class="text-h5">Apakah anda ingin menambahkan kwitansi ini?</v-card-title>
                         <v-card-actions>
                           <v-spacer></v-spacer>
-                          <v-btn color="blue darken-1" text @click="closeDelete">Batal</v-btn>
+                          <v-btn color="blue darken-1" text >Batal</v-btn>
                           <v-btn color="blue darken-1" text @click="saveInsert">Tambah</v-btn>
                           <v-spacer></v-spacer>
                         </v-card-actions>
@@ -153,10 +154,19 @@
             </v-toolbar>
             <v-divider></v-divider>        
             <v-data-table
+              v-model="simpan2"
               :headers="headers"
               :items="dokumenKwitansi"
+              item-key="kwt_number"
               class="elevation-1 my-5"
+              show-select
             >
+              <template v-slot:[`item.dpp_amount`]="{ item }">
+                {{formatCurrency(item.dpp_amount)}}
+              </template>    
+              <template v-slot:[`item.pph_amount`]="{ item }">
+                {{formatCurrency(item.pph_amount)}}
+              </template>                                          
             </v-data-table>         
             </v-card-text>
         </v-card>
@@ -169,16 +179,21 @@
 <script>
 import axios from 'axios';
 import {mapGetters} from 'vuex';
+import DatePicker from "../../../components/DatePicker.vue";
 export default {
     data () {
       return {
+        sumpphKwitansi:0,
+        value:null,
         dialog: false,
         dialogDelete: false,
         singleSelect: false,
         dokumenBupot:{},
         listingKwt:[],
         dokumenKwitansi:[],
+        editedIndex:[],
         simpan:[],
+        simpan2:[],
         idKwt:[],
         data:[],
         data2:[],
@@ -204,14 +219,48 @@ export default {
         let uri = `http://localhost:8000/api/getkwtterdaftar`;
             axios.get(uri).then(response => {
                 this.idKwt = response.data.data;
-            });      
+            });          
     },
     computed: {
+          result: function(){
+              return this.dokumenBupot.dpp_amount * this.dokumenBupot.percentage;
+          },
         ...mapGetters({
           user: 'user',
         })
+        
     },
     methods: { 
+        insertKwitansi(){
+          var sum = 0;
+          this.dokumenBupot.pph_amount=this.result;
+          this.simpan2.forEach(item => {
+            sum = sum + parseInt(item.pph_amount);
+          })
+          this.sumpphKwitansi = sum;          
+          if (this.dokumenBupot.pph_amount != this.sumpphKwitansi){
+            alert("Jumlah PPH tidak Sama dengan PPH Kwitansi yang diinput")
+          } else if (this.dokumenBupot.pph_amount == this.sumpphKwitansi){
+          axios({
+            method: 'post',
+            url: 'http://localhost:8000/api/inputinquiry',
+            data: {
+              user_id: this.user.id,
+              data_process:this.simpan2,
+              data_bupot:this.dokumenBupot,
+              role_id: this.user.role_id,
+              customer_id :this.user.customer_id
+            },
+          })
+           .then(() => {
+              this.$router.push({name: 'TrxPage'});
+            })
+            .catch(error => {
+              console.log(error.response)
+
+            }) 
+          }           
+        },
         close(){
           this.dialog = false
         },
@@ -225,12 +274,12 @@ export default {
                 .then(response => {
                     this.listingKwt = response.data.data;
                 });
-
         },
         saveInsert(){
             this.data=this.simpan
             this.data.forEach(item => {
               this.dokumenKwitansi.push({
+                kwt_id:item.kwt_id,
                 kwt_number:item.kwt_number,
                 kwt_date:item.kwt_date,
                 kwt_type:item.kwt_type,
@@ -242,7 +291,32 @@ export default {
             })
             this.dialogDelete=false;
             this.dialog=false;
-        }
+        },
+        deleteItem () {
+          for(var i = 0; i <this.simpan2.length; i++){
+              const index = this.dokumenKwitansi.indexOf(this.simpan2[i]);
+              const index2 = this.idKwt.indexOf(this.simpan2[i].kwt_id);
+              this.dokumenKwitansi.splice(index, 1);
+              this.idKwt.splice(index2, 1);
+          }
+          this.simpan2.splice(0);          
+        },
+
+        deleteItemConfirm () {
+          this.desserts.splice(this.editedIndex, 1)
+          this.closeDelete()
+        },
+        formatCurrency(value){
+            var formatter = new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'IDR',
+            });
+
+            return formatter.format(value); /* $2,500.00 */          
+        }              
+    },
+    components: {
+      DatePicker
     }
 }
 
