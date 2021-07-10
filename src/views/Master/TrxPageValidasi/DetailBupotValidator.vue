@@ -41,24 +41,39 @@
             filled
             readonly
           ></v-text-field>
-          <v-text-field
+          <vuetify-money
             v-model="dokumenBupot.dpp_amount"
             label="Jumlah Penghasilan Bruto"
-            filled
+            v-bind:placeholder="placeholder"
             readonly
-          ></v-text-field>
-          <v-text-field
+            disabled
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+          /> 
+          <vuetify-money
             v-model="dokumenBupot.percentage"
-            label="tarif"
-            filled
+            label="Tarif"
+            v-bind:placeholder="placeholder"
             readonly
-          ></v-text-field>
-          <v-text-field
+            disabled
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+          />                            
+          <vuetify-money
             v-model="dokumenBupot.pph_amount"
             label="PPh"
-            filled
-            readonly
-          ></v-text-field>
+            v-bind:placeholder="placeholder"
+            v-bind:readonly="readonly"
+            disabled
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+          /> 
         </v-card-text>
       </v-card>
       </v-col>
@@ -92,6 +107,23 @@ import {mapGetters} from 'vuex';
 export default {
     data () {
       return {
+        placeholder: " ",
+        readonly: false,
+        disabled: false,
+        outlined: true,
+        clearable: true,
+        valueWhenIsEmpty: "0",
+        options: {
+          locale: "pt-BR",
+          prefix: "IDR",
+          suffix: "",
+          length: 11,
+          precision: 0
+        },
+        properties: {
+          hint: "my hint"
+          // You can add other v-text-field properties, here.
+        },
         dialog: false,
         singleSelect: false,
         dokumenBupot:{},

@@ -24,6 +24,7 @@
               class="mb-2"
               v-bind="attrs"
               v-on="on"
+              @click="resetValidation2"
             >
               Tambah Menu
             </v-btn>
@@ -117,7 +118,7 @@
                       :items="role_id"
                       item-text="role_name"
                       item-value="id"
-                      label="Role ID "
+                      label="Role"
                       placeholder="Select..."
                       required
                     ></v-autocomplete>
@@ -308,7 +309,33 @@ import moment from 'moment';
       deleteItem (item) {
         this.editedIndex = this.userData.indexOf(item)
         this.editedItem = Object.assign({}, item)
-        this.dialogDelete = true
+        // this.dialogDelete = true
+        this.$swal.fire({
+          title: 'Apakah anda ingin menghapus data ini?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Hapus'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            axios.delete(`http://localhost:8000/api/v1/deletemenus/${this.editedItem.menu_id}`)
+                .then(() => {
+                  let uri = `http://localhost:8000/api/v1/menus`;
+                      axios.get(uri).then(response => {
+                          this.userData = response.data.data;
+                  });    
+                  this.$swal.fire(
+                    'Sukses!',
+                    'Data Berhasil dihapus',
+                    'success'
+                  )
+                  this.closeDelete()           
+                }).catch((error) => {
+                  alert(error);
+            });
+          }
+        })
       },
 
       deleteItemConfirm () {
@@ -339,19 +366,43 @@ import moment from 'moment';
 
       save () {
           if (this.editedIndex > -1){
+            this.$swal.fire({
+              title: 'Apakah anda ingin mengupdate data ini?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Update'
+            }).then((result) => {
+              if (result.isConfirmed) {
                 let uri = `http://localhost:8000/api/v1/updatemenus/${this.editedItem.menu_id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
-                        // window.location.reload();
                         let uri = `http://localhost:8000/api/v1/menus`;
                             axios.get(uri).then(response => {
                                 this.userData = response.data.data;
-                        });                        
-                        this.close();
+                        });       
+                        this.$swal.fire(
+                          'Sukses!',
+                          'Data berhasil di update!',
+                          'success'
+                        )
+                        this.close();                                         
                     }).catch(error => {
                     this.validation = error.response.data.data;
-                });
-          }else{
+                });     
+              }
+            })   
+          }else{           
+            this.$swal.fire({
+              title: 'Apakah anda ingin menambahkan data ini?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Tambah'
+            }).then((result) => {
+              if (result.isConfirmed) {
                 let uri = `http://localhost:8000/api/v1/createmenus/${this.user.id}`;
                 axios.post(uri, this.editedItem)
                     .then(() => {
@@ -359,14 +410,25 @@ import moment from 'moment';
                             axios.get(uri).then(response => {
                                 this.userData = response.data.data;
                         });
+                        this.$swal.fire(
+                          'Sukses!',
+                          'Data berhasil di simpan!',
+                          'success'
+                        )                        
                         this.close();
                     }).catch(error => {
-                    this.validation = error.response.data.data;
+                    this.validation = error.response.data.data;                    
                 });
+              }
+            })
           }
       },
       formatDate(value){
         return moment(value).format("DD-MM-YYYY");
+      },
+      resetValidation2(){
+        this.validation = [];
+        this.validation.splice(0);
       }
     },
     

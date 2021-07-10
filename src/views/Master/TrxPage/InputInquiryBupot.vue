@@ -6,7 +6,6 @@
       >
         <v-toolbar-title>Input Bukti Potong PPh</v-toolbar-title>
         <v-spacer></v-spacer>
-        <!-- <button>coba</button> -->
         <v-btn
           color="success"
           dark
@@ -15,7 +14,7 @@
         >
           Simpan
         </v-btn> 
-        <router-link :to="{name: 'TrxPage'}">
+        <!-- <router-link :to="{name: 'TrxPage'}">
                 <v-btn
           color="success"
           dark
@@ -23,7 +22,7 @@
         >
           Kembali
         </v-btn>          
-        </router-link>
+        </router-link> -->
     </v-toolbar>
     <v-divider></v-divider>
     <v-row no-gutters class="px-5">
@@ -40,25 +39,63 @@
             v-model="dokumenBupot.bupot_number"
             label="Nomor Dok. BuktiPotong"
             class="mt-5"
-          ></v-text-field>
+            :rules="[rules.required]"
+          ></v-text-field>      
           <v-text-field v-model="dokumenBupot.bupot_date" single-line label="Masukan Tanggal">
             <template v-slot:append-outer>
               <date-picker v-model="dokumenBupot.bupot_date"/>
             </template>
-          </v-text-field>                   
-          <v-text-field
+          </v-text-field>    
+          <vuetify-money
             v-model="dokumenBupot.dpp_amount"
             label="Jumlah Penghasilan Bruto"
-          ></v-text-field>
-          <v-text-field
+            v-bind:placeholder="placeholder"
+            v-bind:readonly="readonly"
+            v-bind:disabled="disabled"
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+            :rules="[rules.required]"
+            class="mt-2"
+          /> 
+          <vuetify-money
+            v-model="dokumenBupot.percentage"
+            label="Tarif"
+            v-bind:placeholder="placeholder"
+            v-bind:readonly="readonly"
+            v-bind:disabled="disabled"
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+            :rules="[rules.required]"
+          />                            
+          <vuetify-money
+            v-model="result"
+            label="PPh"
+            v-bind:placeholder="placeholder"
+            v-bind:readonly="readonly"
+            disabled
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+            :rules="[rules.required]"
+          /> 
+          <!-- <v-text-field
+            v-model="dokumenBupot.dpp_amount"
+            label="Jumlah Penghasilan Bruto"
+          ></v-text-field> -->
+          <!-- <v-text-field
             v-model="dokumenBupot.percentage"
             label="tarif"
-          ></v-text-field>
-          <v-text-field
+          ></v-text-field> -->
+          <!-- <v-text-field
             v-model="result"
             label="PPh"
             disabled
-          ></v-text-field>
+          ></v-text-field> -->
         </v-card-text>
       </v-card>
       </v-col>
@@ -104,7 +141,7 @@
                           Tambah Ke Bupot
                         </v-btn>
                         <v-btn
-                          color="primary"
+                          color="error"
                           dark
                           class="mb-2"
                           @click="close"
@@ -122,18 +159,24 @@
                               show-select
                               class="elevation-1"
                             >
+                              <template v-slot:[`item.kwt_date`]="{ item }">
+                                {{formatDate(item.kwt_date)}}
+                              </template> 
                               <template v-slot:[`item.dpp_amount`]="{ item }">
                                 {{formatCurrency(item.dpp_amount)}}
                               </template>    
                               <template v-slot:[`item.pph_amount`]="{ item }">
                                 {{formatCurrency(item.pph_amount)}}
-                              </template>                             
+                              </template>
+                              <template v-slot:[`item.ppn_amount`]="{ item }">
+                                {{formatCurrency(item.ppn_amount)}}
+                              </template>                           
                             </v-data-table>                
                         </v-card-text>
                       </v-card>
                     </v-dialog>
                     <v-btn
-                      color="success"
+                      color="error"
                       dark
                       class="mb-2 ml-2"
                       @click="deleteItem()"
@@ -180,9 +223,30 @@
 import axios from 'axios';
 import {mapGetters} from 'vuex';
 import DatePicker from "../../../components/DatePicker.vue";
+import moment from "moment"
 export default {
     data () {
       return {
+        kolom: "",
+        value2: "1234567.89",
+        label: "Value",
+        placeholder: " ",
+        readonly: false,
+        disabled: false,
+        outlined: true,
+        clearable: true,
+        valueWhenIsEmpty: "0",
+        options: {
+          locale: "pt-BR",
+          prefix: "IDR",
+          suffix: "",
+          length: 11,
+          precision: 0
+        },
+        properties: {
+          hint: "my hint"
+          // You can add other v-text-field properties, here.
+        },
         sumpphKwitansi:0,
         value:null,
         dialog: false,
@@ -213,6 +277,15 @@ export default {
           { text: 'PPN Kwitansi', value: 'ppn_amount' },
           { text: 'PPH Kwitansi', value: 'pph_amount' },
         ],
+        rules: {
+          required: value => !!value || 'Required.',
+          counter: value => value.length <= 20 || 'Max 20 characters',
+          email: value => {
+            const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            return pattern.test(value) || 'Invalid e-mail.'
+          },
+        },
+
       }
     },
     created(){          
@@ -232,34 +305,75 @@ export default {
     },
     methods: { 
         insertKwitansi(){
-          var sum = 0;
+          this.kolom="";
           this.dokumenBupot.pph_amount=this.result;
-          this.simpan2.forEach(item => {
-            sum = sum + parseInt(item.pph_amount);
-          })
-          this.sumpphKwitansi = sum;          
-          if (this.dokumenBupot.pph_amount != this.sumpphKwitansi){
-            alert("Jumlah PPH tidak Sama dengan PPH Kwitansi yang diinput")
-          } else if (this.dokumenBupot.pph_amount == this.sumpphKwitansi){
-          axios({
-            method: 'post',
-            url: 'http://localhost:8000/api/inputinquiry',
-            data: {
-              user_id: this.user.id,
-              data_process:this.simpan2,
-              data_bupot:this.dokumenBupot,
-              role_id: this.user.role_id,
-              customer_id :this.user.customer_id
-            },
-          })
-           .then(() => {
-              this.$router.push({name: 'TrxPage'});
+          if(typeof this.dokumenBupot.bupot_number === 'undefined' || this.dokumenBupot.bupot_number === ""){
+            this.kolom = this.kolom + "Nomor Bupot "
+          }
+          if(typeof this.dokumenBupot.bupot_date === 'undefined' || this.dokumenBupot.bupot_date === ""){
+            this.kolom = this.kolom + "Tanggal Bupot "
+          }
+          if(typeof this.dokumenBupot.dpp_amount === 'undefined' || this.dokumenBupot.dpp_amount === ""){
+            this.kolom = this.kolom + "Jumlah Penghasilan Bruto "
+          }  
+          if(typeof this.dokumenBupot.percentage === 'undefined' || this.dokumenBupot.percentage === ""){
+            this.kolom = this.kolom + "Tarif "
+          }                
+          // alert(this.kolom);
+          var sum = 0;
+          if (typeof this.dokumenBupot.bupot_number === 'undefined' || this.dokumenBupot.bupot_number === "" || typeof this.dokumenBupot.bupot_date === 'undefined' || this.dokumenBupot.bupot_date === "" ||  typeof this.dokumenBupot.dpp_amount === 'undefined' || this.dokumenBupot.dpp_amount === "" || typeof this.dokumenBupot.percentage === 'undefined' || this.dokumenBupot.percentage === "" || typeof this.dokumenBupot.pph_amount === 'undefined' || this.dokumenBupot.pph_amount === ""){
+            this.$swal.fire(
+              'Warning!',
+              this.kolom+ 'Masih kosong!',
+              'warning'
+            )
+          }else {
+            this.simpan2.forEach(item => {
+              sum = sum + parseInt(item.pph_amount);
             })
-            .catch(error => {
-              console.log(error.response)
-
-            }) 
-          }           
+            this.sumpphKwitansi = sum;
+            if (this.dokumenBupot.pph_amount != this.sumpphKwitansi){
+              this.$swal.fire(
+                'Warning!',
+                'Jumlah PPH tidak Sama dengan PPH Kwitansi yang diinput',
+                'warning'
+              )
+            } else if (this.dokumenBupot.pph_amount == this.sumpphKwitansi){
+                this.$swal.fire({
+                  title: 'Apakah anda ingin menambahkan data ini?',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#3085d6',
+                  cancelButtonColor: '#d33',
+                  confirmButtonText: 'Tambah'
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    axios({
+                      method: 'post',
+                      url: 'http://localhost:8000/api/inputinquiry',
+                      data: {
+                        user_id: this.user.id,
+                        data_process:this.simpan2,
+                        data_bupot:this.dokumenBupot,
+                        role_id: this.user.role_id,
+                        customer_id :this.user.customer_id
+                      },
+                    })
+                     .then(() => {
+                      this.$swal.fire(
+                        'Sukses!',
+                        'Data berhasil di simpan!',
+                        'success'
+                      )
+                        this.$router.push({name: 'TrxPage'});
+                      })
+                      .catch(error => {
+                        console.log(error.response)
+                      }) 
+                  }
+                })
+              }               
+          }          
         },
         close(){
           this.dialog = false
@@ -313,6 +427,9 @@ export default {
             });
 
             return formatter.format(value); /* $2,500.00 */          
+        },
+        formatDate(value){
+          return moment(value).format("DD-MM-YYYY");
         }              
     },
     components: {

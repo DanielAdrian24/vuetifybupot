@@ -71,10 +71,7 @@ const routes = [
   {
     path: '/trxPage',
     name: 'TrxPage',
-    component: () => import( '../views/Master/TrxPage/TrxPage.vue'),
-    meta: { 
-      auth: true 
-    }
+    component: () => import( '../views/Master/TrxPage/TrxPage.vue')
   },
   {
     path: '/detailbupot/:id',
@@ -89,8 +86,7 @@ const routes = [
     name: 'InputInquiryBupot',
     component: () => import( '../views/Master/TrxPage/InputInquiryBupot.vue'),
     meta: { 
-      auth: true,
-      auth_nokasir:true  
+      auth: true
     }
   },
   {
@@ -145,6 +141,11 @@ const routes = [
     }
   },
   {
+    path:'/pdf',
+    name: 'Pdf',
+    component: () => import( '../views/Master/Pdf/Pdf.vue')
+  },
+  {
     path:'/forkasir2',
     name: 'ForKasir2',
     component: () => import( '../components/ForKasir2.vue'),
@@ -165,36 +166,30 @@ router.beforeEach((to, from, next) => {
     if (store.getters.isLoggedIn && store.getters.user) {
       next()
       if (to.matched.some(record => record.meta.kasir)){
-        if(store.getters.user.role_id == 11 || store.getters.user.role_id == 7){
+        if(store.getters.user.role_id == 1){
           next()
         }else{
           next('/forkasir')
         }
       }
       if (to.matched.some(record => record.meta.auth_validator)){
-        if(store.getters.user.role_id == 10 || store.getters.user.role_id == 7){
+        if(store.getters.user.role_id == 2 || store.getters.user.role_id == 1){
           next()
         }else{
           next('/forvalidator')
         }
       }
       if (to.matched.some(record => record.meta.admin)){
-        if(store.getters.user.role_id == 7){
+        if(store.getters.user.role_id == 1){
           next()
         }else{
           next('/foradmin')
         }
       }
-      if (to.matched.some(record => record.meta.auth_nokasir)){
-        if(store.getters.user.role_id == 11){
-          next('/forkasir2')
-        }else{
-          next()
-        }
-      }
       return
+    } else {
+      next('/')
     }
-    next('/')
   }
 
   next()

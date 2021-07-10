@@ -20,22 +20,20 @@
           Submit
         </v-btn>
         <v-btn
-          color="success"
+          color="error"
           dark
           class="mb-2 mr-1"
           v-if="dokumenBupot.status != 'S'"
           @click="updateCancel(dokumenBupot.bupot_id)"
         >
-          Batal
+          Cancel
         </v-btn>  
-          <v-btn
-          color="success"
-          dark
-          class="mb-2"
+        <v-btn
+          icon
           @click="closeDialog"
         >
-          Kembali
-        </v-btn>          
+          <v-icon>mdi-close</v-icon>
+        </v-btn>         
     </v-toolbar>
     <v-divider></v-divider>
     <v-row no-gutters class="px-5">
@@ -61,7 +59,40 @@
             filled
             readonly
           ></v-text-field>
-          <v-text-field
+          <vuetify-money
+            v-model="dokumenBupot.dpp_amount"
+            label="Jumlah Penghasilan Bruto"
+            v-bind:placeholder="placeholder"
+            readonly
+            disabled
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+          />  
+          <vuetify-money
+            v-model="dokumenBupot.percentage"
+            label="Tarif"
+            v-bind:placeholder="placeholder"
+            readonly
+            disabled
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+          />  
+          <vuetify-money
+            v-model="dokumenBupot.pph_amount"
+            label="PPh"
+            v-bind:placeholder="placeholder"
+            readonly
+            disabled
+            v-bind:outlined="outlined"
+            v-bind:clearable="clearable"
+            v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
+            v-bind:options="options"
+          /> 
+          <!-- <v-text-field
             v-model="dokumenBupot.dpp_amount"
             label="Jumlah Penghasilan Bruto"
             filled
@@ -78,7 +109,7 @@
             label="PPh"
             filled
             readonly
-          ></v-text-field>
+          ></v-text-field> -->
         </v-card-text>
       </v-card>
       </v-col>
@@ -97,6 +128,15 @@
               sort-by="calories"
               class="elevation-1 my-5"
             >
+              <template v-slot:[`item.dpp_amount`]="{ item }">
+                {{formatCurrency(item.dpp_amount)}}
+              </template>
+              <template v-slot:[`item.ppn_amount`]="{ item }">
+                {{formatCurrency(item.ppn_amount)}}
+              </template>
+              <template v-slot:[`item.pph_amount`]="{ item }">
+                {{formatCurrency(item.pph_amount)}}
+              </template>
             </v-data-table>         
             </v-card-text>
         </v-card>
@@ -141,7 +181,7 @@
           Cari Data
         </v-btn>        
         <v-btn
-          color="success"
+          color="error"
           dark
           class="mb-2 ml-2"
           @click="resetData"
@@ -160,19 +200,36 @@
   >
     <template v-slot:[`item.bupot_number`]="{ item }">
         <!-- <router-link :to="{name: 'DetailBupot', params: { id: value }}"> -->
-        <a @click="showDialog(item)">
+        <a @click="showPdf(item)" v-if="item.status === 'S'" class="font-weight-bold">
           {{ item.bupot_number }}
-        </a>                 
+        </a>          
+        <a @click="showDialog(item)" v-else-if="item.status === 'D'" class="font-weight-bold">
+          {{ item.bupot_number }}
+        </a>  
+        <div v-else-if="item.status === 'R'" class="font-weight-bold">
+          {{ item.bupot_number }}
+        </div>
+        <div v-else-if="item.status === 'C'" class="font-weight-bold">
+          {{ item.bupot_number }}
+        </div>                     
         <!-- </router-link> -->
     </template>
     <template v-slot:[`item.status`]="{ item }">
-      {{formatValidasi(item.status)}}
+      <div class="font-weight-bold">
+        {{formatValidasi(item.status)}}
+      </div>
     </template>
     <template v-slot:[`item.dpp_amount`]="{ item }">
       {{formatCurrency(item.dpp_amount)}}
     </template>
+    <template v-slot:[`item.percentage`]="{ item }">
+      {{formatCurrency(item.percentage)}}
+    </template>
     <template v-slot:[`item.pph_amount`]="{ item }">
-      {{formatCurrency(item.dpp_amount)}}
+      {{formatCurrency(item.pph_amount)}}
+    </template>
+    <template v-slot:[`item.bupot_date`]="{ item }">
+      {{formatDate(item.bupot_date)}}
     </template>
   </v-data-table>
   </v-card>
@@ -183,9 +240,33 @@
 import DatePicker from "../../../components/DatePicker.vue";
 import axios from 'axios'
 import {mapGetters} from 'vuex'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+import moment from 'moment'
   export default {
     data () {
       return {
+        data:[],
+        value2: "1234567.89",
+        label: "Value",
+        placeholder: " ",
+        readonly: false,
+        disabled: false,
+        outlined: true,
+        clearable: true,
+        valueWhenIsEmpty: "0",
+        options: {
+          locale: "pt-BR",
+          prefix: "IDR",
+          suffix: "",
+          length: 11,
+          precision: 0
+        },
+        properties: {
+          hint: "my hint"
+          // You can add other v-text-field properties, here.
+        },
+        customer:[],
         dokumenBupot:{},
         dialogDelete:false,
         cariData:[],
@@ -198,6 +279,9 @@ import {mapGetters} from 'vuex'
         selectedIndex:0,
         selectedItem:{},
         dokumenKwt:[],
+        dokumenKwtarray:[],
+        dokumenKwtarray2:[],
+        dokumenKwtarray3:[],
         headers: [
           { text: 'Status', value: 'status' },
           { text: 'Nomor Bukti Potong', value: 'bupot_number' },
@@ -239,11 +323,13 @@ import {mapGetters} from 'vuex'
                 data: {
                   nomor_bupot: this.cariData.nomor_bupot,
                   tanggal_awal: this.cariData.tanggal_awal,
-                  tanggal_akhir: this.cariData.tanggal_akhir
+                  tanggal_akhir: this.cariData.tanggal_akhir,
+                  cust_id: this.user.customer_id
                 },
               })
                .then(response => {
                  this.inquiryBupot = response.data.data;
+                 console.log(this.inquiryBupot)
                   // window.location.reload();
                 })
                 .catch(error => {
@@ -259,8 +345,6 @@ import {mapGetters} from 'vuex'
         },
         formatCurrency(value){
             var formatter = new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'IDR',
             });
 
             return formatter.format(value); /* $2,500.00 */          
@@ -295,25 +379,183 @@ import {mapGetters} from 'vuex'
           this.dokumenKwt = []
         },
         updateSubmit (id) {
-          let uri = `http://localhost:8000/api/updatestatusbupotsubmit/${id}`;
-              axios.post(uri).then(() => {
-                let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
-                    axios.get(uri).then(response => {
-                        this.inquiryBupot = response.data.data;
-                });
-              });
-          this.dialogDelete = false      
+            this.$swal.fire({
+              title: 'Apakah anda yakin ingin submit data ini?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Submit'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                let uri = `http://localhost:8000/api/updatestatusbupotsubmit/${id}`;
+                    axios.post(uri).then(() => {
+                      let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
+                          axios.get(uri).then(response => {
+                              this.inquiryBupot = response.data.data;
+                      });
+                      this.$swal.fire(
+                        'Sukses!',
+                        'Data berhasil di submit!',
+                        'success'
+                      )
+                      this.dialogDelete = false    
+                    }); 
+              }
+            }) 
         },     
         updateCancel (id){
-          let uri = `http://localhost:8000/api/updatestatusbupotcancel/${id}`;
-              axios.post(uri).then(() => {
-                let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
-                    axios.get(uri).then(response => {
-                        this.inquiryBupot = response.data.data;
-                });
-              }); 
-          this.dialogDelete = false 
-        }                   
+            this.$swal.fire({
+              title: 'Apakah anda yakin ingin cancel data ini?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Cancel',
+              cancelButtonText: 'Batal'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                let uri = `http://localhost:8000/api/updatestatusbupotcancel/${id}`;
+                    axios.post(uri).then(() => {
+                      let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
+                          axios.get(uri).then(response => {
+                              this.inquiryBupot = response.data.data;
+                      });
+                      this.$swal.fire(
+                        'Sukses!',
+                        'Data berhasil di cancel!',
+                        'success'
+                      )
+                      this.dialogDelete = false   
+                    });   
+              }
+            }) 
+        },
+        showPdf(item){
+          this.dokumenKwtarray3.splice(0);
+          var sum = 0;
+          var sumb = 0;
+          var sumc = 0;
+          let uri = `http://localhost:8000/api/getcustnumberandname/${this.user.customer_id}`;
+            axios.get(uri).then(response => {
+              this.customer = response.data.data;
+            }); 
+          let uri2 = `http://localhost:8000/api/getkwtarray/${item.bupot_id}/${this.user.customer_id}`;
+            axios.get(uri2).then(response => {
+              this.dokumenKwtarray = response.data.data;
+              try {
+                this.dokumenKwtarray2=this.dokumenKwtarray.map(this.getKwtValue)
+              }
+              catch(err) {
+                console.log(err);
+              }
+              this.data=this.dokumenKwtarray
+              this.data.forEach(item => {
+                this.dokumenKwtarray3.push({
+                  kwt_id:item.kwt_id,
+                  kwt_number:item.kwt_number,
+                  kwt_date:this.formatDate(item.kwt_date),
+                  kwt_type:item.kwt_type,
+                  dpp_amount:this.formatCurrency(item.dpp_amount),
+                  ppn_amount:this.formatCurrency(item.ppn_amount),
+                  pph_amount:this.formatCurrency(item.pph_amount)
+                })
+              })
+              this.dokumenKwtarray.forEach(item => {
+                sum = sum + parseInt(item.dpp_amount);
+              })
+              this.dokumenKwtarray.forEach(item => {
+                sumb = sumb + parseInt(item.ppn_amount);
+              })  
+              this.dokumenKwtarray.forEach(item => {
+                sumc = sumc + parseInt(item.pph_amount);
+              })             
+              sum = this.formatCurrency(sum);
+              sumb = this.formatCurrency(sumb);
+              sumc = this.formatCurrency(sumc);
+              try {
+                this.dokumenKwtarray3=this.dokumenKwtarray3.map(this.getKwtValue)
+              }
+              catch(err) {
+                console.log(err);
+              }        
+              var cust_name = this.customer.map(({ customer_name }) => customer_name)
+              var cust_number = this.customer.map(({ customer_number }) => customer_number)
+              var header = cust_number + ' - ' + cust_name;
+              // doc.text(header, 13, 5, { baseline: 'middle' });
+              var doc = new jsPDF();
+              doc.text("Tanda Terima Bukti Potong Sementara",105,15,{baseline: 'middle',align: 'center'});
+              doc.setFontSize(10);
+              doc.text(item.bupot_number + ' / ' + item.bupot_date,85,23,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});
+              doc.setFontSize(10);
+              doc.text("Customer",166,10,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});
+              doc.setFontSize(10);
+              doc.text(header,166,15,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});              
+              doc.autoTable({ 
+                  columnStyles: {
+                    0: {cellWidth:30}, 
+                    3: {halign:'right',cellWidth:35},
+                    4: {halign:'right',cellWidth:35},
+                    5: {halign:'right',cellWidth:35}
+                  },  
+                  bodyStyles : {lineColor: [0, 0 ,0 ]},
+                  headerStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0],
+                      fillColor: [255, 255, 255],
+                      textColor:'black'
+                  },
+                  footStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0],
+                      fillColor: [255, 255, 255],
+                      textColor:'black'
+                  },                  
+                  theme: 'grid',
+                  head: [['Nomor Kwitansi', 'Tanggal Kwitansi', 'Jenis Kwitansi', 'DPP Kwitansi', 'PPN Kwitansi', 'PPh Kwitansi']],
+                  body: this.dokumenKwtarray3,
+                  margin: {top: 30},
+                  foot: [[
+                    {content: 'Grand total', colSpan: 3, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sum, colSpan: 1, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumb, colSpan: 1, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumc, colSpan: 1, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}}
+                  ]]
+                })
+                  doc.autoTable({
+                  bodyStyles : {lineColor: [0, 0 ,0 ]},
+                  headerStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0]
+                  },             
+                  theme : 'grid',
+                  head: [[{content: 'Validation Notes', colSpan: 2, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}}]],
+                  body: [
+                    ['Tgl. Validasi Bupot:  ', '                          '],
+                    ['Tgl. Cetak  Bupot:  ', '                          '],
+                    ['Tgl. Kembali:  ', '                          '],
+                    ['Paraf Petugas Validasi:  ', '                          '],
+                    ['Nama Petugas:  ', '                          '],
+                  ],
+                  margin: {left: 135},
+                  startY: 215,
+                  lineColor: [0,0,0]
+                })
+              // doc.output('dataurlnewwindow')
+              doc.setProperties({
+                  title: "Laporan Bukti Potong"
+              });
+              window.open(doc.output('bloburl'))
+            }); 
+          this.dokumenKwtarray2.splice(0);
+        },
+        getKwtValue(item){
+            var data = [item.kwt_number,item.kwt_date,item.kwt_type,item.dpp_amount,item.ppn_amount,item.pph_amount];
+            return data;
+        },
+        formatDate(value){
+          return moment(value).format("DD-MM-YYYY");
+        },                   
     },
     components: {
       DatePicker

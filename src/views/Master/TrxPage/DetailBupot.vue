@@ -59,7 +59,7 @@
             label="Tanggal Bukti Potong"
             filled
             readonly
-          ></v-text-field>
+          ></v-text-field> 
           <v-text-field
             v-model="dokumenBupot.dpp_amount"
             label="Jumlah Penghasilan Bruto"
@@ -111,6 +111,25 @@ import {mapGetters} from 'vuex';
 export default {
     data () {
       return {
+        value2: "1234567.89",
+        label: "Value",
+        placeholder: " ",
+        readonly: false,
+        disabled: false,
+        outlined: true,
+        clearable: true,
+        valueWhenIsEmpty: "0",
+        options: {
+          locale: "pt-BR",
+          prefix: "IDR",
+          suffix: "",
+          length: 11,
+          precision: 0
+        },
+        properties: {
+          hint: "my hint"
+          // You can add other v-text-field properties, here.
+        },
         dialog: false,
         singleSelect: false,
         dokumenBupot:{},

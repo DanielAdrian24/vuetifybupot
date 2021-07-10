@@ -59,19 +59,21 @@ export default {
     userLogin() {
       this.$store
         .dispatch("login", this.form)
-        .then(() => {
-          // alert(this.user.role_id)
-          if(this.user.role_id == 12){
-            this.$router.push({ name: "TrxPage" });
-          }else if (this.user.role_id == 7){
-            this.$router.push({ name: "TrxPage" });
-          }else if (this.user.role_id == 10){
-            this.$router.push({ name: "TrxPageValidator" });
-          }
+        .then(response  => {
+          console.log(response)
+          this.$router.push({ name: "TrxPage" });
+        //  if(this.user.role_id == 1){
+        //   this.$router.push({ name: "TrxPage" });
+        //   }else if (this.user.role_id == 3){
+        //     this.$router.push({ name: "TrxPage" });
+        //   }else if (this.user.role_id == 2){
+        //     this.$router.push({ name: "TrxPageValidator" });
+        //   }  
         })
         .catch((error) => {
           this.errors = error.response.data.errors;
-        });
+          console.log(this.errors)
+        });     
     },
   },
   computed: {
