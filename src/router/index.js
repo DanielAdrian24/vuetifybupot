@@ -71,7 +71,10 @@ const routes = [
   {
     path: '/trxPage',
     name: 'TrxPage',
-    component: () => import( '../views/Master/TrxPage/TrxPage.vue')
+    component: () => import( '../views/Master/TrxPage/TrxPage.vue'),
+    meta: { 
+      redirectValidator: true 
+    }
   },
   {
     path: '/detailbupot/:id',
@@ -191,7 +194,6 @@ router.beforeEach((to, from, next) => {
       next('/')
     }
   }
-
   next()
 })
 

@@ -298,9 +298,9 @@ import moment from 'moment';
                 console.log(this.role_id)
             });
     },
-
     methods: {
       editItem (item) {
+        this.resetValidation2();
         this.editedIndex = this.userData.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
@@ -319,33 +319,35 @@ import moment from 'moment';
           confirmButtonText: 'Hapus'
         }).then((result) => {
           if (result.isConfirmed) {
-            axios.delete(`http://localhost:8000/api/v1/deletemenus/${this.editedItem.menu_id}`)
-                .then(() => {
+            axios({
+                method: 'delete',
+                url: 'http://localhost:8000/api/v1/deletemenus',
+                data: {
+                  id:this.editedItem.menu_id
+                },
+              })
+               .then(() => {
                   let uri = `http://localhost:8000/api/v1/menus`;
                       axios.get(uri).then(response => {
                           this.userData = response.data.data;
-                  });    
-                  this.$swal.fire(
-                    'Sukses!',
-                    'Data Berhasil dihapus',
-                    'success'
-                  )
-                  this.closeDelete()           
-                }).catch((error) => {
-                  alert(error);
-            });
+                      });
+                      this.$swal.fire(
+                        'Sukses!',
+                        'Data Berhasil dihapus',
+                        'success'
+                      )
+                      this.closeDelete()
+                })
+                .catch(error => {
+                  console.log(error.response)
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal dihapus',
+                        'warning'
+                      )
+                }) 
           }
         })
-      },
-
-      deleteItemConfirm () {
-        axios.delete(`http://localhost:8000/api/v1/deletemenus/${this.editedItem.menu_id}`)
-            .then(() => {
-                window.location.reload();
-            }).catch((error) => {
-            alert(error);
-        });
-        this.closeDelete()
       },
 
       close () {
@@ -375,22 +377,31 @@ import moment from 'moment';
               confirmButtonText: 'Update'
             }).then((result) => {
               if (result.isConfirmed) {
-                let uri = `http://localhost:8000/api/v1/updatemenus/${this.editedItem.menu_id}`;
-                axios.post(uri, this.editedItem)
-                    .then(() => {
-                        let uri = `http://localhost:8000/api/v1/menus`;
-                            axios.get(uri).then(response => {
-                                this.userData = response.data.data;
-                        });       
-                        this.$swal.fire(
-                          'Sukses!',
-                          'Data berhasil di update!',
-                          'success'
-                        )
-                        this.close();                                         
-                    }).catch(error => {
-                    this.validation = error.response.data.data;
-                });     
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/v1/updatemenus',
+                    data: this.editedItem
+                  })
+                   .then(() => {
+                      let uri = `http://localhost:8000/api/v1/menus`;
+                          axios.get(uri).then(response => {
+                              this.userData = response.data.data;
+                          });
+                          this.$swal.fire(
+                            'Sukses!',
+                            'Data berhasil di update!',
+                            'success'
+                          )
+                          this.close();
+                    })
+                    .catch(error => {
+                      this.validation = error.response.data.data;
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal diupdate',
+                        'warning'
+                      )
+                    }) 
               }
             })   
           }else{           
@@ -403,22 +414,34 @@ import moment from 'moment';
               confirmButtonText: 'Tambah'
             }).then((result) => {
               if (result.isConfirmed) {
-                let uri = `http://localhost:8000/api/v1/createmenus/${this.user.id}`;
-                axios.post(uri, this.editedItem)
-                    .then(() => {
-                        let uri = `http://localhost:8000/api/v1/menus`;
-                            axios.get(uri).then(response => {
-                                this.userData = response.data.data;
-                        });
-                        this.$swal.fire(
-                          'Sukses!',
-                          'Data berhasil di simpan!',
-                          'success'
-                        )                        
-                        this.close();
-                    }).catch(error => {
-                    this.validation = error.response.data.data;                    
-                });
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/v1/createmenus',
+                    data: {
+                      dataMenu: this.editedItem,
+                      id: this.user.id
+                    }
+                  })
+                   .then(() => {
+                      let uri = `http://localhost:8000/api/v1/menus`;
+                          axios.get(uri).then(response => {
+                              this.userData = response.data.data;
+                          });
+                          this.$swal.fire(
+                            'Sukses!',
+                            'Data berhasil di simpan!',
+                            'success'
+                          )
+                          this.close();
+                    })
+                    .catch(error => {
+                      this.validation = error.response.data.data;
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal disimpan',
+                        'warning'
+                      )
+                    }) 
               }
             })
           }

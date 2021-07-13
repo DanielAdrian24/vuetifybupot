@@ -231,17 +231,6 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="dialogDelete" max-width="500px">
-          <v-card>
-            <v-card-title class="text-h5">Apakah anda ingin menghapus data ini?</v-card-title>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeDelete">Batal</v-btn>
-              <v-btn color="blue darken-1" text @click="deleteItemConfirm">Hapus</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
       </v-toolbar>
       <v-divider></v-divider>
     </template>
@@ -322,6 +311,7 @@ import {mapGetters} from 'vuex'
 
     methods: {
       editItem (item) {
+        this.deleteValidator();
         this.editedIndex = this.userData.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
@@ -341,38 +331,36 @@ import {mapGetters} from 'vuex'
           confirmButtonText: 'Hapus'
         }).then((result) => {
           if (result.isConfirmed) {
-          axios.delete(`http://localhost:8000/api/v1/deletecustomers/${this.editedItem.id}`)
-              .then(() => {
-                let uri = `http://localhost:8000/api/v1/customers`;
-                    axios.get(uri).then(response => {
-                        this.userData = response.data.data;
-                    });
-              this.$swal.fire(
-              'Sukses!',
-              'Data Berhasil dihapus',
-              'success'
-            )
-            this.closeDelete()
-              }).catch((error) => {
-              alert(error);
-          });        
+            axios({
+                method: 'delete',
+                url: 'http://localhost:8000/api/v1/deletecustomers',
+                data: {
+                  id:this.editedItem.id
+                },
+              })
+               .then(() => {
+                  let uri = `http://localhost:8000/api/v1/customers`;
+                      axios.get(uri).then(response => {
+                          this.userData = response.data.data;
+                      });
+                      this.$swal.fire(
+                        'Sukses!',
+                        'Data Berhasil dihapus',
+                        'success'
+                      )
+                      this.closeDelete()
+                })
+                .catch(error => {
+                  console.log(error.response)
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal dihapus',
+                        'warning'
+                      )
+                }) 
           }
         })
       },
-
-      deleteItemConfirm () {
-        axios.delete(`http://localhost:8000/api/v1/deletecustomers/${this.editedItem.id}`)
-            .then(() => {
-              let uri = `http://localhost:8000/api/v1/customers`;
-                  axios.get(uri).then(response => {
-                      this.userData = response.data.data;
-                  });
-            }).catch((error) => {
-            alert(error);
-        });        
-        this.closeDelete()
-      },
-
       close () {
         this.dialog = false
         this.$nextTick(() => {
@@ -400,22 +388,31 @@ import {mapGetters} from 'vuex'
             confirmButtonText: 'Update'
           }).then((result) => {
             if (result.isConfirmed) {
-              let uri = `http://localhost:8000/api/v1/updatecustomers/${this.editedItem.id}`;
-              axios.post(uri, this.editedItem)
-                  .then(() => {
-                      let uri = `http://localhost:8000/api/v1/customers`;
-                          axios.get(uri).then(response => {
-                              this.userData = response.data.data;
-                      });
-                      this.$swal.fire(
-                        'Sukses!',
-                        'Data berhasil di update!',
-                        'success'
-                      )
-                      this.close();
-                  }).catch(error => {
-                  this.validation = error.response.data.data;
-              });
+              axios({
+                  method: 'post',
+                  url: 'http://localhost:8000/api/v1/updatecustomers',
+                  data: this.editedItem
+                })
+                 .then(() => {
+                    let uri = `http://localhost:8000/api/v1/customers`;
+                        axios.get(uri).then(response => {
+                            this.userData = response.data.data;
+                        });
+                        this.$swal.fire(
+                          'Sukses!',
+                          'Data berhasil di update!',
+                          'success'
+                        )
+                        this.close();
+                  })
+                  .catch(error => {
+                    this.validation = error.response.data.data;
+                    this.$swal.fire(
+                      'Gagal!',
+                      'Data Gagal diupdate',
+                      'warning'
+                    )
+                  }) 
             }
           })
         }else{
@@ -428,23 +425,50 @@ import {mapGetters} from 'vuex'
             confirmButtonText: 'Tambah'
           }).then((result) => {
             if (result.isConfirmed) {
-              let uri = `http://localhost:8000/api/v1/createcustomers/${this.user.id}`;
-              axios.post(uri, this.editedItem)
-                  .then(() => {
-                      let uri = `http://localhost:8000/api/v1/customers`;
-                          axios.get(uri).then(response => {
-                              this.userData = response.data.data;
-                      });
-                      this.$swal.fire(
-                        'Sukses!',
-                        'Data berhasil ditambah',
-                        'success'
-                      )
-                      this.close();
-                  }).catch(error => {
-                  this.validation = error.response.data.data;
-                  console.log(this.validation)
-              });
+              axios({
+                  method: 'post',
+                  url: 'http://localhost:8000/api/v1/createcustomers',
+                  data: {
+                    dataCustomer: this.editedItem,
+                    id: this.user.id
+                  }
+                })
+                 .then(() => {
+                    let uri = `http://localhost:8000/api/v1/customers`;
+                        axios.get(uri).then(response => {
+                            this.userData = response.data.data;
+                        });
+                        this.$swal.fire(
+                          'Sukses!',
+                          'Data berhasil di simpan!',
+                          'success'
+                        )
+                        this.close();
+                  })
+                  .catch(error => {
+                    this.validation = error.response.data.data;
+                    this.$swal.fire(
+                      'Gagal!',
+                      'Data Gagal disimpan',
+                      'warning'
+                    )
+                  }) 
+              // let uri = `http://localhost:8000/api/v1/createcustomers/${this.user.id}`;
+              // axios.post(uri, this.editedItem)
+              //     .then(() => {
+              //         let uri = `http://localhost:8000/api/v1/customers`;
+              //             axios.get(uri).then(response => {
+              //                 this.userData = response.data.data;
+              //         });
+              //         this.$swal.fire(
+              //           'Sukses!',
+              //           'Data berhasil ditambah',
+              //           'success'
+              //         )
+              //         this.close();
+              //     }).catch(error => {
+              //     this.validation = error.response.data.data;
+              // });
             }
           })
         }

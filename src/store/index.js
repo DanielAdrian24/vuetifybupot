@@ -63,7 +63,6 @@ export default new Vuex.Store({
       return new Promise((resolve) => {
       commit('reset_user')
       localStorage.removeItem('token')
-      console.log("MASOK22");
       delete axios.defaults.headers.common['Authorization']
       resolve()
       })

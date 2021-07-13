@@ -23,6 +23,7 @@
               class="mb-2"
               v-bind="attrs"
               v-on="on"
+              @click="reset"
             >
               Tambah Role
             </v-btn>
@@ -198,9 +199,15 @@ import {mapGetters} from 'vuex'
           confirmButtonText: 'Hapus'
         }).then((result) => {
           if (result.isConfirmed) {
-            axios.delete(`http://localhost:8000/api/v1/deleterole/${this.editedItem.id}`)
-                .then(() => {
-                let uri = `http://localhost:8000/api/v1/roles`;
+            axios({
+                method: 'delete',
+                url: 'http://localhost:8000/api/v1/deleterole',
+                data: {
+                  id:this.editedItem.id
+                },
+              })
+               .then(() => {
+                  let uri = `http://localhost:8000/api/v1/roles`;
                       axios.get(uri).then(response => {
                           this.userData = response.data.data;
                       });
@@ -210,9 +217,30 @@ import {mapGetters} from 'vuex'
                         'success'
                       )
                       this.closeDelete()
-                }).catch((error) => {
-                alert(error);
-            }); 
+                })
+                .catch(error => {
+                  console.log(error.response)
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal dihapus',
+                        'warning'
+                      )
+                })  
+            // axios.delete(`http://localhost:8000/api/v1/deleterole/${this.editedItem.id}`)
+            //     .then(() => {
+            //     let uri = `http://localhost:8000/api/v1/roles`;
+            //           axios.get(uri).then(response => {
+            //               this.userData = response.data.data;
+            //           });
+            //           this.$swal.fire(
+            //             'Sukses!',
+            //             'Data Berhasil dihapus',
+            //             'success'
+            //           )
+            //           this.closeDelete()
+            //     }).catch((error) => {
+            //     alert(error);
+            // }); 
           }
         })
       },
@@ -233,6 +261,7 @@ import {mapGetters} from 'vuex'
       close () {
         this.dialog = false
         this.$nextTick(() => {
+          this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         })
       },
@@ -240,10 +269,14 @@ import {mapGetters} from 'vuex'
       closeDelete () {
         this.dialogDelete = false
         this.$nextTick(() => {
+          this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         })
       },
-
+      reset (){
+        this.validation = [];
+        this.validation.splice(0);
+      },
       save () {
           if (this.editedIndex > -1){
             this.$swal.fire({
@@ -255,22 +288,34 @@ import {mapGetters} from 'vuex'
               confirmButtonText: 'Update'
             }).then((result) => {
               if (result.isConfirmed) {
-                let uri = `http://localhost:8000/api/v1/updaterole/${this.editedItem.id}`;
-                axios.post(uri, this.editedItem)
-                    .then(() => {
-                        let uri = `http://localhost:8000/api/v1/roles`;
-                              axios.get(uri).then(response => {
-                                  this.userData = response.data.data;
-                              });
-                        this.$swal.fire(
-                          'Sukses!',
-                          'Data berhasil di update!',
-                          'success'
-                        )
-                        this.close();
-                    }).catch(error => {
-                    this.validation = error.response.data.data;
-                });   
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/v1/updaterole',
+                    data: {
+                      dataRole: this.editedItem,
+                      id:this.editedItem.id
+                    }
+                  })
+                   .then(() => {
+                      let uri = `http://localhost:8000/api/v1/roles`;
+                          axios.get(uri).then(response => {
+                              this.userData = response.data.data;
+                          });
+                          this.$swal.fire(
+                            'Sukses!',
+                            'Data berhasil di update!',
+                            'success'
+                          )
+                          this.close();
+                    })
+                    .catch(error => {
+                      this.validation = error.response.data.data;
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal diupdate',
+                        'warning'
+                      )
+                    })    
               }
             })  
           }else{
@@ -283,23 +328,33 @@ import {mapGetters} from 'vuex'
               confirmButtonText: 'Tambah'
             }).then((result) => {
               if (result.isConfirmed) {
-                let uri = `http://localhost:8000/api/v1/createroles`;
-                axios.post(uri, this.editedItem)
-                    .then(() => {
-                        let uri = `http://localhost:8000/api/v1/roles`;
-                              axios.get(uri).then(response => {
-                                  this.userData = response.data.data;
-                              });
-                        this.$swal.fire(
-                          'Sukses!',
-                          'Data berhasil di simpan!',
-                          'success'
-                        )
-                        this.close();
-                    }).catch(error => {
-                    this.validation = error.response.data.data;
-                    console.log(this.validation)
-                });   
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/v1/createroles',
+                    data: {
+                      dataRole: this.editedItem
+                    }
+                  })
+                   .then(() => {
+                      let uri = `http://localhost:8000/api/v1/roles`;
+                          axios.get(uri).then(response => {
+                              this.userData = response.data.data;
+                          });
+                          this.$swal.fire(
+                            'Sukses!',
+                            'Data berhasil di simpan!',
+                            'success'
+                          )
+                          this.close();
+                    })
+                    .catch(error => {
+                      this.validation = error.response.data.data;
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal disimpan',
+                        'warning'
+                      )
+                    })  
               }
             })
           }

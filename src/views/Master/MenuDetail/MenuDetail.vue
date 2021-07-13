@@ -287,38 +287,36 @@ import moment from 'moment';
           confirmButtonText: 'Hapus'
         }).then((result) => {
           if (result.isConfirmed) {
-            axios.delete(`http://localhost:8000/api/v1/deletemenudetails/${this.editedItem.menu_detail_id}`)
-                .then(() => {
+            axios({
+                method: 'delete',
+                url: 'http://localhost:8000/api/v1/deletemenudetails',
+                data: {
+                  id:this.editedItem.menu_detail_id
+                },
+              })
+               .then(() => {
                   let uri = `http://localhost:8000/api/v1/menudetails`;
-                  axios.get(uri).then(response => {
-                      this.userData = response.data.data;
-                  });
-                  this.$swal.fire(
-                    'Sukses!',
-                    'Data Berhasil dihapus',
-                    'success'
-                  )
-                  this.closeDelete()                  
-                }).catch((error) => {
-                alert(error);
-            });
+                      axios.get(uri).then(response => {
+                          this.userData = response.data.data;
+                      });
+                      this.$swal.fire(
+                        'Sukses!',
+                        'Data Berhasil dihapus',
+                        'success'
+                      )
+                      this.closeDelete()
+                })
+                .catch(error => {
+                  console.log(error.response)
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal dihapus',
+                        'warning'
+                      )
+                })             
           }
         })
       },
-
-      deleteItemConfirm () {
-        axios.delete(`http://localhost:8000/api/v1/deletemenudetails/${this.editedItem.menu_detail_id}`)
-            .then(() => {
-              let uri = `http://localhost:8000/api/v1/menudetails`;
-              axios.get(uri).then(response => {
-                  this.userData = response.data.data;
-              });
-            }).catch((error) => {
-            alert(error);
-        });
-        this.closeDelete()
-      },
-
       close () {
         this.dialog = false
         this.$nextTick(() => {
@@ -347,28 +345,34 @@ import moment from 'moment';
               confirmButtonText: 'Update'
             }).then((result) => {
               if (result.isConfirmed) {
-                let uri = `http://localhost:8000/api/v1/updatemenudetails/${this.editedItem.menu_detail_id}`;
-                axios.post(uri, this.editedItem)
-                    .then(() => {
-                        let uri = `http://localhost:8000/api/v1/menudetails`;
-                        axios.get(uri).then(response => {
-                            this.userData = response.data.data;
-                        });
-                        this.$swal.fire(
-                          'Sukses!',
-                          'Data berhasil di update!',
-                          'success'
-                        )
-                        this.close();                        
-                    }).catch(error => {
-                    this.validation = error.response.data.data;
-                    // console.log(error.response.data.message)
-                        this.$swal.fire(
-                          'Gagal!',
-                          'Data gagal di update!',
-                          'warning'
-                        )
-                });     
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/v1/updatemenudetails',
+                    data: {
+                      dataMenudetail: this.editedItem,
+                      role_id:this.user.role_id
+                    }
+                  })
+                   .then(() => {
+                      let uri = `http://localhost:8000/api/v1/menudetails`;
+                          axios.get(uri).then(response => {
+                              this.userData = response.data.data;
+                          });
+                          this.$swal.fire(
+                            'Sukses!',
+                            'Data berhasil di update!',
+                            'success'
+                          )
+                          this.close();
+                    })
+                    .catch(error => {
+                      this.validation = error.response.data.data;
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal diupdate',
+                        'warning'
+                      )
+                    })     
               }
             })   
           }else{
@@ -381,24 +385,52 @@ import moment from 'moment';
               confirmButtonText: 'Tambah'
             }).then((result) => {
               if (result.isConfirmed) {
-                let uri = `http://localhost:8000/api/v1/createmenudetails/${this.user.id}`;
-                axios.post(uri, this.editedItem)
-                    .then(() => {
-                        let uri = `http://localhost:8000/api/v1/menudetails`;
-                        axios.get(uri).then(response => {
-                            this.userData = response.data.data;
-                        });
-                        this.close();
-                        this.$swal.fire(
-                          'Sukses!',
-                          'Data berhasil di simpan!',
-                          'success'
-                        )
-                        this.close();
-                    }).catch(error => {
-                    this.validation = error.response.data.data;
-                    console.log(this.validation);
-                });
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/v1/createmenudetails',
+                    data: {
+                      dataMenudetail: this.editedItem,
+                      id: this.user.id
+                    }
+                  })
+                   .then(() => {
+                      let uri = `http://localhost:8000/api/v1/menudetails`;
+                          axios.get(uri).then(response => {
+                              this.userData = response.data.data;
+                          });
+                          this.$swal.fire(
+                            'Sukses!',
+                            'Data berhasil di simpan!',
+                            'success'
+                          )
+                          this.close();
+                    })
+                    .catch(error => {
+                      this.validation = error.response.data.data;
+                      this.$swal.fire(
+                        'Gagal!',
+                        'Data Gagal disimpan',
+                        'warning'
+                      )
+                    }) 
+                // let uri = `http://localhost:8000/api/v1/createmenudetails/${this.user.id}`;
+                // axios.post(uri, this.editedItem)
+                //     .then(() => {
+                //         let uri = `http://localhost:8000/api/v1/menudetails`;
+                //         axios.get(uri).then(response => {
+                //             this.userData = response.data.data;
+                //         });
+                //         this.close();
+                //         this.$swal.fire(
+                //           'Sukses!',
+                //           'Data berhasil di simpan!',
+                //           'success'
+                //         )
+                //         this.close();
+                //     }).catch(error => {
+                //     this.validation = error.response.data.data;
+                //     console.log(this.validation);
+                // });
               }
             })
           }

@@ -51,42 +51,37 @@ export default {
             data:[],
             adminmenuItem:[],
             menuItem2:[],
+            componentKey:0
         }
     },
     methods: {
               logout: function() {
               this.$store.dispatch('logout').then(() =>
-              this.$router.push("/"))
-          }
+              this.$router.push("/")) 
+              }            
     },
     computed: {
           ...mapGetters({
           user: 'user',
         }),     
-        reversedMessage: function () {
-          // `this` points to the vm instance
-
-            return this.menuItem2;
-        }
     },
     created() {
             this.menuItem = [];
-            this.$nextTick(() => {
-              let uri = `http://localhost:8000/api/v1/getmenu/${this.user.role_id}`;
-                  axios.get(uri).then(response => {
-                  this.menuItem = response.data.data;
-                  this.data = this.menuItem;
-                  this.data.forEach(item => {              
-                  this.menuItem2.push({
-                    icon: 'person',
-                    text: item.menu_detail_name,
-                    route: item.menu_detail_desc
-                  })
-                })
+            this.menuItem.splice(0);
+              this.$nextTick(() => {
+                let uri = `http://localhost:8000/api/v1/getmenu/${this.user.role_id}`;
+                    axios.get(uri).then(response => {
+                    this.menuItem = response.data.data;
+                    this.data = this.menuItem;
+                    this.data.forEach(item => {              
+                      this.menuItem2.push({
+                        icon: 'person',
+                        text: item.menu_detail_name,
+                        route: item.menu_detail_desc
+                      })
+                    })
+                });             
               });
-            });
-    },
-    mounted() {
     }
 }
 </script>

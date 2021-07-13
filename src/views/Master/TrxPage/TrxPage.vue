@@ -309,7 +309,21 @@ import moment from 'moment'
           user: 'user',
         })
     },
+    mounted(){
+      if (localStorage.getItem('reloaded')) {
+          // The page was just reloaded. Clear the value from local storage
+          // so that it will reload the next time this page is visited.
+          localStorage.removeItem('reloaded');
+      } else {
+          // Set a flag so that we know not to reload the page twice.
+          localStorage.setItem('reloaded', '1');
+          location.reload();
+      }
+    },
     created () {
+        if (this.user.role_id == 2){
+          this.$router.push({ name: "TrxPageValidator" }).catch(() => {});
+        }
         let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
             axios.get(uri).then(response => {
                 this.inquiryBupot = response.data.data;
@@ -330,7 +344,6 @@ import moment from 'moment'
                .then(response => {
                  this.inquiryBupot = response.data.data;
                  console.log(this.inquiryBupot)
-                  // window.location.reload();
                 })
                 .catch(error => {
                   console.log(error.response)
@@ -343,8 +356,16 @@ import moment from 'moment'
                     this.inquiryBupot = response.data.data;
                 });          
         },
+        formatCurrency2(value){
+            var formatter = new Intl.NumberFormat('en-US', {
+            });
+
+            return formatter.format(value); /* $2,500.00 */          
+        },
         formatCurrency(value){
             var formatter = new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'IDR',
             });
 
             return formatter.format(value); /* $2,500.00 */          
@@ -456,9 +477,9 @@ import moment from 'moment'
                   kwt_number:item.kwt_number,
                   kwt_date:this.formatDate(item.kwt_date),
                   kwt_type:item.kwt_type,
-                  dpp_amount:this.formatCurrency(item.dpp_amount),
-                  ppn_amount:this.formatCurrency(item.ppn_amount),
-                  pph_amount:this.formatCurrency(item.pph_amount)
+                  dpp_amount:this.formatCurrency2(item.dpp_amount),
+                  ppn_amount:this.formatCurrency2(item.ppn_amount),
+                  pph_amount:this.formatCurrency2(item.pph_amount)
                 })
               })
               this.dokumenKwtarray.forEach(item => {
@@ -470,9 +491,9 @@ import moment from 'moment'
               this.dokumenKwtarray.forEach(item => {
                 sumc = sumc + parseInt(item.pph_amount);
               })             
-              sum = this.formatCurrency(sum);
-              sumb = this.formatCurrency(sumb);
-              sumc = this.formatCurrency(sumc);
+              sum = this.formatCurrency2(sum);
+              sumb = this.formatCurrency2(sumb);
+              sumc = this.formatCurrency2(sumc);
               try {
                 this.dokumenKwtarray3=this.dokumenKwtarray3.map(this.getKwtValue)
               }
@@ -493,10 +514,10 @@ import moment from 'moment'
               doc.text(header,166,15,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});              
               doc.autoTable({ 
                   columnStyles: {
-                    0: {cellWidth:30}, 
-                    3: {halign:'right',cellWidth:35},
-                    4: {halign:'right',cellWidth:35},
-                    5: {halign:'right',cellWidth:35}
+                    0: {cellWidth:50, fontStyle: 'bold'}, 
+                    3: {halign:'right',cellWidth:30},
+                    4: {halign:'right',cellWidth:30},
+                    5: {halign:'right',cellWidth:30}
                   },  
                   bodyStyles : {lineColor: [0, 0 ,0 ]},
                   headerStyles: {
@@ -516,10 +537,10 @@ import moment from 'moment'
                   body: this.dokumenKwtarray3,
                   margin: {top: 30},
                   foot: [[
-                    {content: 'Grand total', colSpan: 3, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}},
-                    {content: sum, colSpan: 1, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}},
-                    {content: sumb, colSpan: 1, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}},
-                    {content: sumc, colSpan: 1, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}}
+                    {content: 'Grand total', colSpan: 3, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sum, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumb, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumc, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}}
                   ]]
                 })
                   doc.autoTable({
