@@ -66,6 +66,7 @@ export default {
         }),     
     },
     created() {
+	// alert(this.user.role_id);
             this.menuItem = [];
             this.menuItem.splice(0);
               this.$nextTick(() => {

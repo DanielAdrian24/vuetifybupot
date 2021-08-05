@@ -72,46 +72,6 @@
                       dense
                       text
                       type="warning"
-                      v-if="validation.attribute1"
-                    >
-                    {{ validation.attribute1[0] }}
-                    </v-alert>    
-                    <v-alert
-                      dense
-                      text
-                      type="warning"
-                      v-if="validation.attribute2"
-                    >
-                    {{ validation.attribute2[0] }}
-                    </v-alert>    
-                    <v-alert
-                      dense
-                      text
-                      type="warning"
-                      v-if="validation.attribute3"
-                    >
-                    {{ validation.attribute3[0] }}
-                    </v-alert>    
-                    <v-alert
-                      dense
-                      text
-                      type="warning"
-                      v-if="validation.attribute4"
-                    >
-                    {{ validation.attribute4[0] }}
-                    </v-alert> 
-                    <v-alert
-                      dense
-                      text
-                      type="warning"
-                      v-if="validation.attribute5"
-                    >
-                    {{ validation.attribute5[0] }}
-                    </v-alert>    
-                    <v-alert
-                      dense
-                      text
-                      type="warning"
                       v-if="validation.active_flag"
                     >
                     {{ validation.active_flag[0] }}
@@ -148,46 +108,6 @@
                     <v-text-field
                       v-model="editedItem.email"
                       label="Email"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                  >
-                    <v-text-field
-                      v-model="editedItem.attribute1"
-                      label="Attribute 1"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                  >
-                    <v-text-field
-                      v-model="editedItem.attribute2"
-                      label="Attribute 2"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                  >
-                    <v-text-field
-                      v-model="editedItem.attribute3"
-                      label="Attribute 3"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                  >
-                    <v-text-field
-                      v-model="editedItem.attribute4"
-                      label="Attribute 4"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                  >
-                    <v-text-field
-                      v-model="editedItem.attribute5"
-                      label="Attribute 5"
                     ></v-text-field>
                   </v-col>
                   <v-col
@@ -453,22 +373,6 @@ import {mapGetters} from 'vuex'
                       'warning'
                     )
                   }) 
-              // let uri = `http://localhost:8000/api/v1/createcustomers/${this.user.id}`;
-              // axios.post(uri, this.editedItem)
-              //     .then(() => {
-              //         let uri = `http://localhost:8000/api/v1/customers`;
-              //             axios.get(uri).then(response => {
-              //                 this.userData = response.data.data;
-              //         });
-              //         this.$swal.fire(
-              //           'Sukses!',
-              //           'Data berhasil ditambah',
-              //           'success'
-              //         )
-              //         this.close();
-              //     }).catch(error => {
-              //     this.validation = error.response.data.data;
-              // });
             }
           })
         }

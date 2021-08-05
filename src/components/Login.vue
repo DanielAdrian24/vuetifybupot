@@ -16,7 +16,6 @@
   >
     <v-text-field
       v-model="form.username"
-      :counter="10"
       label="Username"
       required
     ></v-text-field>
@@ -61,14 +60,16 @@ export default {
         .dispatch("login", this.form)
         .then(()  => {
           this.$router.push('/trxpage'); 
-          // if(this.user.role_id == 1){
-          //   this.$router.push({ name: "TrxPage" }).catch(() => {});
-          // }else if (this.user.role_id == 3){
-          //   this.$router.push({ name: "TrxPage" }).catch(() => {});
-          // }else if (this.user.role_id == 2){
-          //   this.$router.push({ name: "TrxPageValidator" }).catch(() => {});
-          // } 
-        })    
+        })
+        .catch(error => {
+                console.log(error);
+                this.$swal.fire(
+                  'Gagal Login!',
+                  'Username atau password salah!',
+                  'warning'
+                )
+
+        }) 
     }
   },
   computed: {

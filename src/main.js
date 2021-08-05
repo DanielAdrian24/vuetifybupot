@@ -18,7 +18,7 @@ Vue.use(VueSweetalert2);
 // import VueCurrencyInput from "vue-currency-input";
 // import "vuetify/dist/vuetify.min.css";
 
-axios.defaults.baseURL = 'http://localhost:8000/api/'
+axios.defaults.baseURL = 'http://localhost:8000/api'
 
 // Vue.use(VueCurrencyInput);
 Vue.config.productionTip = false

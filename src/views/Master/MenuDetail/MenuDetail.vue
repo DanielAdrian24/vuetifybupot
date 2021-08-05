@@ -157,17 +157,6 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="dialogDelete" max-width="500px">
-          <v-card>
-            <v-card-title class="text-h5">Apakah anda ingin menghapus data ini?</v-card-title>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeDelete">Batal</v-btn>
-              <v-btn color="blue darken-1" text @click="deleteItemConfirm">Hapus</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
       </v-toolbar>
       <v-divider></v-divider>
     </template>
@@ -213,13 +202,12 @@ import moment from 'moment';
       dialog: false,
       dialogDelete: false,
       headers: [
-        { text: 'Menu Detail Id', value: 'menu_detail_id' },
         { text: 'Menu Detail Name', value: 'menu_detail_name' },
         { text: 'Menu Detail Desc', value: 'menu_detail_desc' },
         { text: 'Active_flag', value: 'active_flag' },
         { text: 'Seq', value: 'seq' },
-        { text: 'Created By', value: 'created_by' },
-        { text: 'Last Update By', value: 'last_update_by' },
+        { text: 'Created By', value: 'created_by',width:110 },
+        { text: 'Last Update By', value: 'last_update_by', width:140 },
         { text: 'Created At', value: 'created_at' },
         { text: 'Updated At', value: 'updated_at' },
         { text: 'Actions', value: 'actions', sortable: false }
@@ -251,7 +239,6 @@ import moment from 'moment';
         val || this.closeDelete()
       },
     },
-
     created () {
         let uri = `http://localhost:8000/api/v1/menudetails`;
         axios.get(uri).then(response => {
@@ -413,24 +400,6 @@ import moment from 'moment';
                         'warning'
                       )
                     }) 
-                // let uri = `http://localhost:8000/api/v1/createmenudetails/${this.user.id}`;
-                // axios.post(uri, this.editedItem)
-                //     .then(() => {
-                //         let uri = `http://localhost:8000/api/v1/menudetails`;
-                //         axios.get(uri).then(response => {
-                //             this.userData = response.data.data;
-                //         });
-                //         this.close();
-                //         this.$swal.fire(
-                //           'Sukses!',
-                //           'Data berhasil di simpan!',
-                //           'success'
-                //         )
-                //         this.close();
-                //     }).catch(error => {
-                //     this.validation = error.response.data.data;
-                //     console.log(this.validation);
-                // });
               }
             })
           }

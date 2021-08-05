@@ -77,6 +77,22 @@ const routes = [
     }
   },
   {
+    path: '/trxPageSubmit',
+    name: 'TrxPageSubmit',
+    component: () => import( '../views/Master/TrxPage/TrxPageSubmit.vue'),
+    meta: { 
+      auth: true 
+    }
+  },
+  {
+    path: '/trxPageCancel',
+    name: 'TrxPageCancel',
+    component: () => import( '../views/Master/TrxPage/TrxPageCancel.vue'),
+    meta: { 
+      auth: true 
+    }
+  },
+  {
     path: '/detailbupot/:id',
     name: 'DetailBupot',
     component: () => import( '../views/Master/TrxPage/DetailBupot.vue'),

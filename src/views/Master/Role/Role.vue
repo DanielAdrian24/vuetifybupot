@@ -226,25 +226,9 @@ import {mapGetters} from 'vuex'
                         'warning'
                       )
                 })  
-            // axios.delete(`http://localhost:8000/api/v1/deleterole/${this.editedItem.id}`)
-            //     .then(() => {
-            //     let uri = `http://localhost:8000/api/v1/roles`;
-            //           axios.get(uri).then(response => {
-            //               this.userData = response.data.data;
-            //           });
-            //           this.$swal.fire(
-            //             'Sukses!',
-            //             'Data Berhasil dihapus',
-            //             'success'
-            //           )
-            //           this.closeDelete()
-            //     }).catch((error) => {
-            //     alert(error);
-            // }); 
           }
         })
       },
-
       deleteItemConfirm () {
         axios.delete(`http://localhost:8000/api/v1/deleterole/${this.editedItem.id}`)
             .then(() => {

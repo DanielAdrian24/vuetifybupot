@@ -41,11 +41,17 @@
             class="mt-5"
             :rules="[rules.required]"
           ></v-text-field>      
-          <v-text-field v-model="dokumenBupot.bupot_date" single-line label="Masukan Tanggal">
+          <v-text-field v-model="dokumenBupot.bupot_date" single-line label="Masukan Tanggal" readonly>
             <template v-slot:append-outer>
               <date-picker v-model="dokumenBupot.bupot_date"/>
             </template>
           </v-text-field>    
+          <v-text-field
+            v-model="dokumenBupot.percentage"
+            label="Tarif"
+            :rules="[rules.required]"
+            type="number"
+          ></v-text-field> 
           <vuetify-money
             v-model="dokumenBupot.dpp_amount"
             label="Jumlah Penghasilan Bruto"
@@ -57,9 +63,9 @@
             v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
             v-bind:options="options"
             :rules="[rules.required]"
-            class="mt-2"
+            class="mt-2 mb-0"
           /> 
-          <vuetify-money
+<!--           <vuetify-money
             v-model="dokumenBupot.percentage"
             label="Tarif"
             v-bind:placeholder="placeholder"
@@ -70,7 +76,7 @@
             v-bind:valueWhenIsEmpty="valueWhenIsEmpty"
             v-bind:options="options"
             :rules="[rules.required]"
-          />                            
+          />   -->                          
           <vuetify-money
             v-model="result"
             label="PPh"
@@ -83,19 +89,6 @@
             v-bind:options="options"
             :rules="[rules.required]"
           /> 
-          <!-- <v-text-field
-            v-model="dokumenBupot.dpp_amount"
-            label="Jumlah Penghasilan Bruto"
-          ></v-text-field> -->
-          <!-- <v-text-field
-            v-model="dokumenBupot.percentage"
-            label="tarif"
-          ></v-text-field> -->
-          <!-- <v-text-field
-            v-model="result"
-            label="PPh"
-            disabled
-          ></v-text-field> -->
         </v-card-text>
       </v-card>
       </v-col>
@@ -128,12 +121,11 @@
                         <v-toolbar
                         class="mb-2"
                         flat
-                        color="success"
                         >
-                        <v-toolbar-title class="white--text">Listing Kwitansi</v-toolbar-title>
+                        <v-toolbar-title>Listing Kwitansi</v-toolbar-title>
                         <v-spacer></v-spacer>
                         <v-btn
-                          color="primary"
+                          color="success"
                           dark
                           class="mb-2 mr-2"
                           @click="save"
@@ -149,7 +141,43 @@
                           Kembali
                         </v-btn>
                         </v-toolbar>
+                        <v-divider></v-divider>
                         <v-card-text>
+                          <v-row class="ml-1">
+                            <v-col
+                            :cols="4">
+                            <v-text-field
+                              v-model="cariData.nomor_kwt"
+                              label="Nomor Kwitansi"
+                            ></v-text-field>
+                            </v-col>
+                            <v-col
+                            :cols="4">
+                            <v-text-field v-model="cariData.tanggal_kwt" single-line label="Tanggal Kwitansi" readonly>
+                              <template v-slot:append-outer>
+                                <date-picker v-model="cariData.tanggal_kwt"/>
+                              </template>
+                            </v-text-field>
+                            </v-col>                         
+                            <v-col :cols="4">
+                               <v-btn
+                                color="success"
+                                dark
+                                class="mt-2"
+                                @click="searchData"
+                              >
+                                Cari Data
+                              </v-btn>   
+                              <v-btn
+                                color="error"
+                                dark
+                                class="mt-2 ml-2"
+                                @click="loadDatakwt"
+                              >
+                                Reset Data
+                              </v-btn>                               
+                            </v-col>
+                          </v-row>         
                             <v-data-table
                               v-model="simpan"
                               :headers="headers2"
@@ -209,7 +237,10 @@
               </template>    
               <template v-slot:[`item.pph_amount`]="{ item }">
                 {{formatCurrency(item.pph_amount)}}
-              </template>                                          
+              </template>     
+              <template v-slot:[`item.ppn_amount`]="{ item }">
+                {{formatCurrency(item.ppn_amount)}}
+              </template>                                                   
             </v-data-table>         
             </v-card-text>
         </v-card>
@@ -227,6 +258,7 @@ import moment from "moment"
 export default {
     data () {
       return {
+        cariData:[],
         kolom: "",
         value2: "1234567.89",
         label: "Value",
@@ -381,8 +413,28 @@ export default {
         save(){
             this.dialogDelete=true;
         },
+        searchData(){
+            axios({
+                method: 'post',
+                url: 'http://localhost:8000/api/searchdatakwt',
+                data: {
+                  kwt_id: this.idKwt,
+                  kwt_number: this.cariData.nomor_kwt,
+                  kwt_date: this.cariData.tanggal_kwt
+                },
+              })
+               .then(response => {
+                 this.listingKwt = response.data.data;
+                  // window.location.reload();
+                })
+                .catch(error => {
+                  console.log(error.response)
+
+                })  
+        },
         loadDatakwt(){
             this.simpan.splice(0);
+            this.cariData=[];
             let uri = `http://localhost:8000/api/listingkwt`;
             axios.post(uri, this.idKwt)
                 .then(response => {

@@ -10,7 +10,7 @@
         <v-toolbar-title>Detail Bukti Potong PPh</v-toolbar-title>
         <v-spacer></v-spacer>
         <!-- <button>coba</button> -->
-        <v-btn
+<!--         <v-btn
           color="success"
           dark
           class="mb-2 mr-1"
@@ -27,7 +27,7 @@
           @click="updateCancel(dokumenBupot.bupot_id)"
         >
           Cancel
-        </v-btn>  
+        </v-btn>   -->
         <v-btn
           icon
           @click="closeDialog"
@@ -125,7 +125,6 @@
             <v-data-table
               :headers="headersKwitansi"
               :items="dokumenKwt"
-              sort-by="calories"
               class="elevation-1 my-5"
             >
               <template v-slot:[`item.dpp_amount`]="{ item }">
@@ -157,7 +156,7 @@
         </v-col>
         <v-col
         :cols="4">
-        <v-text-field v-model="cariData.tanggal_awal" single-line label="Dari Tanggal">
+        <v-text-field v-model="cariData.tanggal_awal" single-line label="Dari Tanggal" readonly>
           <template v-slot:append-outer>
             <date-picker v-model="cariData.tanggal_awal"/>
           </template>
@@ -165,7 +164,7 @@
         </v-col>
         <v-col
         :cols="4">
-        <v-text-field v-model="cariData.tanggal_akhir" single-line label=" Sampai Tanggal">
+        <v-text-field v-model="cariData.tanggal_akhir" single-line label=" Sampai Tanggal" readonly>
           <template v-slot:append-outer>
             <date-picker v-model="cariData.tanggal_akhir"/>
           </template>
@@ -199,19 +198,22 @@
     
   >
     <template v-slot:[`item.bupot_number`]="{ item }">
-        <!-- <router-link :to="{name: 'DetailBupot', params: { id: value }}"> -->
+        <!-- <router-link :to="{name: 'DetailBupot', params: { id: value }}"> -->         
         <a @click="showPdf(item)" v-if="item.status === 'S'" class="font-weight-bold">
           {{ item.bupot_number }}
         </a>          
         <a @click="showDialog(item)" v-else-if="item.status === 'D'" class="font-weight-bold">
           {{ item.bupot_number }}
         </a>  
-        <div v-else-if="item.status === 'R'" class="font-weight-bold">
+        <a @click="showPdf(item)" v-else-if="item.status === 'V'" class="font-weight-bold">
           {{ item.bupot_number }}
-        </div>
-        <div v-else-if="item.status === 'C'" class="font-weight-bold">
+        </a>
+        <a @click="showPdfReject(item)" v-else-if="item.status === 'R'" class="font-weight-bold">
           {{ item.bupot_number }}
-        </div>                     
+        </a>      
+        <a @click="showPdfCancel(item)" v-else-if="item.status === 'C'" class="font-weight-bold">
+          {{ item.bupot_number }}
+        </a>                        
         <!-- </router-link> -->
     </template>
     <template v-slot:[`item.status`]="{ item }">
@@ -324,7 +326,10 @@ import moment from 'moment'
         if (this.user.role_id == 2){
           this.$router.push({ name: "TrxPageValidator" }).catch(() => {});
         }
-        let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
+        if (this.user.role_id == 1){
+          this.$router.push({ name: "TrxPageKasir" }).catch(() => {});
+        }        
+		let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
             axios.get(uri).then(response => {
                 this.inquiryBupot = response.data.data;
             });
@@ -351,6 +356,7 @@ import moment from 'moment'
                 })          
         },
         resetData(){
+            this.cariData = [];
             let uri = `http://localhost:8000/api/trxpage/${this.user.customer_id}`;
                 axios.get(uri).then(response => {
                     this.inquiryBupot = response.data.data;
@@ -457,6 +463,7 @@ import moment from 'moment'
           var sum = 0;
           var sumb = 0;
           var sumc = 0;
+          var i = 1;
           let uri = `http://localhost:8000/api/getcustnumberandname/${this.user.customer_id}`;
             axios.get(uri).then(response => {
               this.customer = response.data.data;
@@ -473,6 +480,7 @@ import moment from 'moment'
               this.data=this.dokumenKwtarray
               this.data.forEach(item => {
                 this.dokumenKwtarray3.push({
+                  nomor:i,
                   kwt_id:item.kwt_id,
                   kwt_number:item.kwt_number,
                   kwt_date:this.formatDate(item.kwt_date),
@@ -481,6 +489,7 @@ import moment from 'moment'
                   ppn_amount:this.formatCurrency2(item.ppn_amount),
                   pph_amount:this.formatCurrency2(item.pph_amount)
                 })
+                i = i + 1;
               })
               this.dokumenKwtarray.forEach(item => {
                 sum = sum + parseInt(item.dpp_amount);
@@ -514,10 +523,11 @@ import moment from 'moment'
               doc.text(header,166,15,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});              
               doc.autoTable({ 
                   columnStyles: {
-                    0: {cellWidth:50, fontStyle: 'bold'}, 
-                    3: {halign:'right',cellWidth:30},
+                    0: {cellWidth:8},
+                    1: {cellWidth:45, fontStyle: 'bold', fontSize: 9}, 
                     4: {halign:'right',cellWidth:30},
-                    5: {halign:'right',cellWidth:30}
+                    5: {halign:'right',cellWidth:30},
+                    6: {halign:'right',cellWidth:30}
                   },  
                   bodyStyles : {lineColor: [0, 0 ,0 ]},
                   headerStyles: {
@@ -533,11 +543,11 @@ import moment from 'moment'
                       textColor:'black'
                   },                  
                   theme: 'grid',
-                  head: [['Nomor Kwitansi', 'Tanggal Kwitansi', 'Jenis Kwitansi', 'DPP Kwitansi', 'PPN Kwitansi', 'PPh Kwitansi']],
+                  head: [['No','Nomor Kwitansi', 'Tanggal Kwitansi', 'Jenis Kwitansi', 'DPP Kwitansi', 'PPN Kwitansi', 'PPh Kwitansi']],
                   body: this.dokumenKwtarray3,
                   margin: {top: 30},
                   foot: [[
-                    {content: 'Grand total', colSpan: 3, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: 'Grand total', colSpan: 4, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
                     {content: sum, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
                     {content: sumb, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
                     {content: sumc, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}}
@@ -562,6 +572,277 @@ import moment from 'moment'
                   startY: 215,
                   lineColor: [0,0,0]
                 })
+                      // doc.setFontSize(35)
+                      // //doc.setTextColor(230);
+                      // doc.setTextColor(245, 245, 245, 0.33);
+                      // doc.setFont("Boogaloo");
+                      // doc.text("Watermark", 60, 200, null, 45);
+              // doc.output('dataurlnewwindow')
+              doc.setProperties({
+                  title: "Laporan Bukti Potong"
+              });
+              window.open(doc.output('bloburl'))
+            }); 
+          this.dokumenKwtarray2.splice(0);
+        },
+        showPdfReject(item){
+          this.dokumenKwtarray3.splice(0);
+          var sum = 0;
+          var sumb = 0;
+          var sumc = 0;
+          var i = 1;
+          let uri = `http://localhost:8000/api/getcustnumberandname/${this.user.customer_id}`;
+            axios.get(uri).then(response => {
+              this.customer = response.data.data;
+            }); 
+          let uri2 = `http://localhost:8000/api/getkwtarray/${item.bupot_id}/${this.user.customer_id}`;
+            axios.get(uri2).then(response => {
+              this.dokumenKwtarray = response.data.data;
+              try {
+                this.dokumenKwtarray2=this.dokumenKwtarray.map(this.getKwtValue)
+              }
+              catch(err) {
+                console.log(err);
+              }
+              this.data=this.dokumenKwtarray
+              this.data.forEach(item => {
+                this.dokumenKwtarray3.push({
+                  nomor:i,
+                  kwt_id:item.kwt_id,
+                  kwt_number:item.kwt_number,
+                  kwt_date:this.formatDate(item.kwt_date),
+                  kwt_type:item.kwt_type,
+                  dpp_amount:this.formatCurrency2(item.dpp_amount),
+                  ppn_amount:this.formatCurrency2(item.ppn_amount),
+                  pph_amount:this.formatCurrency2(item.pph_amount)
+                })
+                i = i + 1;
+              })
+              this.dokumenKwtarray.forEach(item => {
+                sum = sum + parseInt(item.dpp_amount);
+              })
+              this.dokumenKwtarray.forEach(item => {
+                sumb = sumb + parseInt(item.ppn_amount);
+              })  
+              this.dokumenKwtarray.forEach(item => {
+                sumc = sumc + parseInt(item.pph_amount);
+              })             
+              sum = this.formatCurrency2(sum);
+              sumb = this.formatCurrency2(sumb);
+              sumc = this.formatCurrency2(sumc);
+              try {
+                this.dokumenKwtarray3=this.dokumenKwtarray3.map(this.getKwtValue)
+              }
+              catch(err) {
+                console.log(err);
+              }        
+              var cust_name = this.customer.map(({ customer_name }) => customer_name)
+              var cust_number = this.customer.map(({ customer_number }) => customer_number)
+              var header = cust_number + ' - ' + cust_name;
+              // doc.text(header, 13, 5, { baseline: 'middle' });
+              var doc = new jsPDF();
+              doc.text("Tanda Terima Bukti Potong Sementara",105,15,{baseline: 'middle',align: 'center'});
+              doc.setFontSize(10);
+              doc.text(item.bupot_number + ' / ' + item.bupot_date,85,23,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});
+              doc.setFontSize(10);
+              doc.text("Customer",166,10,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});
+              doc.setFontSize(10);
+              doc.text(header,166,15,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});              
+              doc.autoTable({ 
+                  columnStyles: {
+                    0: {cellWidth:8},
+                    1: {cellWidth:45, fontStyle: 'bold', fontSize: 9}, 
+                    4: {halign:'right',cellWidth:30},
+                    5: {halign:'right',cellWidth:30},
+                    6: {halign:'right',cellWidth:30}
+                  },  
+                  bodyStyles : {lineColor: [0, 0 ,0 ]},
+                  headerStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0],
+                      fillColor: [255, 255, 255],
+                      textColor:'black'
+                  },
+                  footStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0],
+                      fillColor: [255, 255, 255],
+                      textColor:'black'
+                  },                  
+                  theme: 'grid',
+                  head: [['No','Nomor Kwitansi', 'Tanggal Kwitansi', 'Jenis Kwitansi', 'DPP Kwitansi', 'PPN Kwitansi', 'PPh Kwitansi']],
+                  body: this.dokumenKwtarray3,
+                  margin: {top: 30},
+                  foot: [[
+                    {content: 'Grand total', colSpan: 4, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sum, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumb, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumc, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}}
+                  ]]
+                })
+                  doc.autoTable({
+                  bodyStyles : {lineColor: [0, 0 ,0 ]},
+                  headerStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0]
+                  },             
+                  theme : 'grid',
+                  head: [[{content: 'Validation Notes', colSpan: 2, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}}]],
+                  body: [
+                    ['Tgl. Validasi Bupot:  ', '                          '],
+                    ['Tgl. Cetak  Bupot:  ', '                          '],
+                    ['Tgl. Kembali:  ', '                          '],
+                    ['Paraf Petugas Validasi:  ', '                          '],
+                    ['Nama Petugas:  ', '                          '],
+                  ],
+                  margin: {left: 135},
+                  startY: 215,
+                  lineColor: [0,0,0]
+                })
+                      // doc.setFontSize(35)
+                      // //doc.setTextColor(230);
+                      // doc.setTextColor(245, 245, 245, 0.33);
+                      // doc.setFont("Boogaloo");
+                      // doc.text("Watermark", 60, 200, null, 45);
+                doc.saveGraphicsState();
+                doc.setGState(new doc.GState({opacity: 0.2}));
+                doc.setFontSize(100)
+                doc.setTextColor(255, 0, 0);
+                doc.text("REJECT", 65, 200, null, 45)
+                doc.restoreGraphicsState();
+              // doc.output('dataurlnewwindow')
+              doc.setProperties({
+                  title: "Laporan Bukti Potong"
+              });
+              window.open(doc.output('bloburl'))
+            }); 
+          this.dokumenKwtarray2.splice(0);
+        },
+        showPdfCancel(item){
+          this.dokumenKwtarray3.splice(0);
+          var sum = 0;
+          var sumb = 0;
+          var sumc = 0;
+          var i = 1;
+          let uri = `http://localhost:8000/api/getcustnumberandname/${this.user.customer_id}`;
+            axios.get(uri).then(response => {
+              this.customer = response.data.data;
+            }); 
+          let uri2 = `http://localhost:8000/api/getkwtarray/${item.bupot_id}/${this.user.customer_id}`;
+            axios.get(uri2).then(response => {
+              this.dokumenKwtarray = response.data.data;
+              try {
+                this.dokumenKwtarray2=this.dokumenKwtarray.map(this.getKwtValue)
+              }
+              catch(err) {
+                console.log(err);
+              }
+              this.data=this.dokumenKwtarray
+              this.data.forEach(item => {
+                this.dokumenKwtarray3.push({
+                  nomor:i,
+                  kwt_id:item.kwt_id,
+                  kwt_number:item.kwt_number,
+                  kwt_date:this.formatDate(item.kwt_date),
+                  kwt_type:item.kwt_type,
+                  dpp_amount:this.formatCurrency2(item.dpp_amount),
+                  ppn_amount:this.formatCurrency2(item.ppn_amount),
+                  pph_amount:this.formatCurrency2(item.pph_amount)
+                })
+                i = i + 1;
+              })
+              this.dokumenKwtarray.forEach(item => {
+                sum = sum + parseInt(item.dpp_amount);
+              })
+              this.dokumenKwtarray.forEach(item => {
+                sumb = sumb + parseInt(item.ppn_amount);
+              })  
+              this.dokumenKwtarray.forEach(item => {
+                sumc = sumc + parseInt(item.pph_amount);
+              })             
+              sum = this.formatCurrency2(sum);
+              sumb = this.formatCurrency2(sumb);
+              sumc = this.formatCurrency2(sumc);
+              try {
+                this.dokumenKwtarray3=this.dokumenKwtarray3.map(this.getKwtValue)
+              }
+              catch(err) {
+                console.log(err);
+              }        
+              var cust_name = this.customer.map(({ customer_name }) => customer_name)
+              var cust_number = this.customer.map(({ customer_number }) => customer_number)
+              var header = cust_number + ' - ' + cust_name;
+              // doc.text(header, 13, 5, { baseline: 'middle' });
+              var doc = new jsPDF();
+              doc.text("Tanda Terima Bukti Potong Sementara",105,15,{baseline: 'middle',align: 'center'});
+              doc.setFontSize(10);
+              doc.text(item.bupot_number + ' / ' + item.bupot_date,85,23,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});
+              doc.setFontSize(10);
+              doc.text("Customer",166,10,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});
+              doc.setFontSize(10);
+              doc.text(header,166,15,{baseline: 'middle',align: 'left',lineHeightFactor: '0.5'});              
+              doc.autoTable({ 
+                  columnStyles: {
+                    0: {cellWidth:8},
+                    1: {cellWidth:45, fontStyle: 'bold', fontSize: 9}, 
+                    4: {halign:'right',cellWidth:30},
+                    5: {halign:'right',cellWidth:30},
+                    6: {halign:'right',cellWidth:30}
+                  },  
+                  bodyStyles : {lineColor: [0, 0 ,0 ]},
+                  headerStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0],
+                      fillColor: [255, 255, 255],
+                      textColor:'black'
+                  },
+                  footStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0],
+                      fillColor: [255, 255, 255],
+                      textColor:'black'
+                  },                  
+                  theme: 'grid',
+                  head: [['No','Nomor Kwitansi', 'Tanggal Kwitansi', 'Jenis Kwitansi', 'DPP Kwitansi', 'PPN Kwitansi', 'PPh Kwitansi']],
+                  body: this.dokumenKwtarray3,
+                  margin: {top: 30},
+                  foot: [[
+                    {content: 'Grand total', colSpan: 4, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sum, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumb, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}},
+                    {content: sumc, colSpan: 1, styles: {halign: 'right', fillColor: [255, 255, 255], textColor:'black'}}
+                  ]]
+                })
+                  doc.autoTable({
+                  bodyStyles : {lineColor: [0, 0 ,0 ]},
+                  headerStyles: {
+                      lineWidth: 0.5,
+                      lineColor: [0, 0, 0]
+                  },             
+                  theme : 'grid',
+                  head: [[{content: 'Validation Notes', colSpan: 2, styles: {halign: 'center', fillColor: [255, 255, 255], textColor:'black'}}]],
+                  body: [
+                    ['Tgl. Validasi Bupot:  ', '                          '],
+                    ['Tgl. Cetak  Bupot:  ', '                          '],
+                    ['Tgl. Kembali:  ', '                          '],
+                    ['Paraf Petugas Validasi:  ', '                          '],
+                    ['Nama Petugas:  ', '                          '],
+                  ],
+                  margin: {left: 135},
+                  startY: 215,
+                  lineColor: [0,0,0]
+                })
+                      // doc.setFontSize(35)
+                      // //doc.setTextColor(230);
+                      // doc.setTextColor(245, 245, 245, 0.33);
+                      // doc.setFont("Boogaloo");
+                      // doc.text("Watermark", 60, 200, null, 45);
+                doc.saveGraphicsState();
+                doc.setGState(new doc.GState({opacity: 0.2}));
+                doc.setFontSize(100)
+                doc.setTextColor(255, 0, 0);
+                doc.text("CANCEL", 65, 200, null, 45)
+                doc.restoreGraphicsState();
               // doc.output('dataurlnewwindow')
               doc.setProperties({
                   title: "Laporan Bukti Potong"
@@ -571,7 +852,7 @@ import moment from 'moment'
           this.dokumenKwtarray2.splice(0);
         },
         getKwtValue(item){
-            var data = [item.kwt_number,item.kwt_date,item.kwt_type,item.dpp_amount,item.ppn_amount,item.pph_amount];
+            var data = [item.nomor,item.kwt_number,item.kwt_date,item.kwt_type,item.dpp_amount,item.ppn_amount,item.pph_amount];
             return data;
         },
         formatDate(value){

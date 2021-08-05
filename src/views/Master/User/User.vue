@@ -260,6 +260,8 @@ import moment from 'moment';
       editedItem: {},
       userData:[],
       cust_id:[],
+      cust_idInsert:[],
+      cust_idUpdate:[],
       role_id:[],
       userUpdate:{},
       validation: []
@@ -289,25 +291,38 @@ import moment from 'moment';
                 this.userData = response.data.data;
                 // console.log(this.userData);
             });
-      let uri2 = `http://localhost:8000/api/v1/customers`;
-            axios.get(uri2).then((response) => {
-                this.cust_id = response.data.data;
-                console.log(this.cust_id);
-            });
+      let uri2 = `http://localhost:8000/api/v1/getcustomersuser1`;
+            axios.get(uri2).then(response => {
+                this.cust_idInsert = response.data.data;
+                // console.log(this.userData);
+            });        
       let uri3 = `http://localhost:8000/api/v1/roles`;
             axios.get(uri3).then((response) => {
                 this.role_id = response.data.data;
-                console.log(this.role_id);
+                // console.log(this.role_id);
             });
     },
 
     methods: {
       editItem (item) {
+      axios({
+          method: 'post',
+          url: 'http://localhost:8000/api/v1/getcustomersuser',
+          data: {
+            cust_id: item.customer_id
+          },
+        })
+         .then(response => {
+            this.cust_idUpdate = response.data.data;
+            this.cust_id = this.cust_idUpdate;
+          })
+          .catch(error => {
+            console.log(error.response)
+          })  
         this.resetValidation2()
         this.editedIndex = this.userData.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
-        console.log(this.editedItem)
       },
 
       deleteItem (item) {
@@ -451,6 +466,7 @@ import moment from 'moment';
       resetform(){
         this.resetValidation2();
         this.editedItem={};
+        this.cust_id = this.cust_idInsert;
       },
       resetValidation2(){
         this.validation = [];
