@@ -171,6 +171,12 @@ const routes = [
     meta: {
       auth: true
     }
+  },
+  {
+    path:'/pilihcustomer',
+    name: 'PilihCustomer',
+    component: () => import( '../views/Master/MasterChooseCustomer/Index.vue'),
+    meta: { hideNavigation: true },
   }
 ]
 

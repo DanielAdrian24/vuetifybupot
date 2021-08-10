@@ -20,6 +20,9 @@ Vue.use(VueSweetalert2);
 
 axios.defaults.baseURL = 'http://localhost:8000/api'
 
+//Global Variable
+Vue.prototype.$customerId = 1
+
 // Vue.use(VueCurrencyInput);
 Vue.config.productionTip = false
 const token = localStorage.getItem('token');

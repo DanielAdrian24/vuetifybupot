@@ -53,7 +53,6 @@ export default new Vuex.Store({
       let response = await axios.get('user')
         commit('set_user', response.data.data)
     } catch (error){
-		alert(error);
         commit('reset_user') 
         delete axios.defaults.headers.common['Authorization']
         localStorage.removeItem('token')
